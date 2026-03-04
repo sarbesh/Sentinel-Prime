@@ -1,44 +1,25 @@
-# Guidance on how to contribute
+# Contributing to Home Network Security Suite
 
-> All contributions to this project will be released under the CC0 public domain
-> dedication. By submitting a pull request or filing a bug, issue, or
-> feature request, you are agreeing to comply with this waiver of copyright interest.
-> Details can be found in our [TERMS](TERMS.md) and [LICENSE](LICENSE).
+Welcome! This project is open, modular, and designed to evolve based on community feedback and contributions. All kinds of input—feature requests, bug reports, ideas, documentation, refactors—are welcome.
 
+## How to Contribute
+- **Check Issues/TODO:** See the open issues and master TODO for tasks you can pick up.
+- **Fork and Clone:** Fork the repo and clone to your development environment.
+- **Branch:** Create a feature or fix branch (e.g., `feature/network-scanner` or `fix/ui-bug`).
+- **Code:** Implement your change, following the project coding guidelines in `/docs/development.md` (coming soon).
+- **Test:** Run unit/integration tests for your module if available.
+- **Pull Request:** Submit a PR, describing your change, linking to relevant issue/TODO item.
+- **Review:** PRs will be reviewed and merged when ready. Discussion/collaboration is encouraged!
 
-There are two primary ways to help:
- - Using the issue tracker, and
- - Changing the code-base.
+## Guidelines
+- Code should be readable, modular, and maintainable.
+- Modular: Build each new feature/tool as a separate component or container whenever reasonable.
+- Documentation/README updates are encouraged with any new feature or change.
+- All modules are open to further enhancement—feel free to propose overhauls or cool new features.
+- Respect the license and community code of conduct.
 
+## Project Philosophy
+This project is always open to change. If you have ideas for a new module, better architecture, cool UI tweaks, or improved learning, get involved!
 
-## Using the issue tracker
-
-Use the issue tracker to suggest feature requests, report bugs, and ask questions.
-This is also a great way to connect with the developers of the project as well
-as others who are interested in this solution.
-
-Use the issue tracker to find ways to contribute. Find a bug or a feature, mention in
-the issue that you will take on that effort, then follow the _Changing the code-base_
-guidance below.
-
-
-## Changing the code-base
-
-Generally speaking, you should fork this repository, make changes in your
-own fork, and then submit a pull request. All new code should have associated
-unit tests that validate implemented features and the presence or lack of defects.
-Additionally, the code should follow any stylistic and architectural guidelines
-prescribed by the project. In the absence of such guidelines, mimic the styles
-and patterns in the existing code-base.
-
-
-## Browser support
-
-We configure our build chain tools
-(typically [Autoprefixer](https://github.com/postcss/autoprefixer)
-and [Babel](https://babeljs.io))
-to support a reasonable set of backward compatibility with older browsers.
-
-Please read up on
-[our current browser support guidance](https://github.com/cfpb/development/blob/master/guides/browser-support.md)
-and follow it when contributing to this project.
+## Questions/Support
+File an issue, start a discussion, or reach out on the project’s forum/chat (TBD).
