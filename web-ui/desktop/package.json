@@ -1,0 +1,65 @@
+{
+  "name": "sentinel-prime-desktop",
+  "productName": "Sentinel Prime",
+  "version": "1.0.0",
+  "description": "Sentinel Prime Security Dashboard - Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:web": "cd ../web-ui && npx expo export --platform web",
+    "build": "npm run build:web && electron-builder",
+    "build:win": "npm run build:web && electron-builder --win",
+    "build:mac": "npm run build:web && electron-builder --mac",
+    "build:linux": "npm run build:web && electron-builder --linux",
+    "build:all": "npm run build:web && electron-builder -mwl"
+  },
+  "build": {
+    "appId": "com.sentinelprime.app",
+    "productName": "Sentinel Prime",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "web-build/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.security"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets",
+      "category": "Network"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "keywords": ["security", "network", "monitoring", "dashboard"],
+  "author": "Sentinel Prime Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-updater": "^6.1.7"
+  }
+}

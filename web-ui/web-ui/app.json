@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "Sentinel Prime",
+    "slug": "sentinel-prime",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "sentinelprime",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a73e8"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sentinelprime.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "package": "com.sentinelprime.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#1a73e8",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "sentinel-prime"
+      }
+    }
+  }
+}

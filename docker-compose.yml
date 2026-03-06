@@ -1,0 +1,65 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sentinel-prime-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - sentinel-prime-data:/app/data
+      - ./web-ui/downloads:/app/downloads
+    environment:
+      - DATABASE_URL=sqlite:///sentinel_prime.db
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  ui:
+    build:
+      context: ./web-ui/docker
+      dockerfile: Dockerfile
+    container_name: sentinel-prime-ui
+    ports:
+      - "3000:80"
+    volumes:
+      - ./web-ui/downloads:/downloads:ro
+    restart: unless-stopped
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Placeholder services for other modules (to be implemented)
+  # network-scanner:
+  #   build:
+  #     context: ./network-scanner
+  #   ...
+
+  # honeypot:
+  #   build:
+  #     context: ./honeypot
+  #   ...
+
+  # ips-ids:
+  #   build:
+  #     context: ./ips-ids
+  #   ...
+
+volumes:
+  sentinel-prime-data:
+    driver: local
+
+networks:
+  default:
+    name: sentinel-prime-network
+    driver: bridge
