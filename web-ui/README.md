@@ -1,76 +1,88 @@
-# Sentinel Prime Web & Mobile UI (React Native + Expo)
+# Sentinel Prime Web UI
 
-This UI serves both web and mobile via one codebase, built with Expo (React Native).
+A cross-platform web interface for the Sentinel Prime network security monitoring system.
 
-## Quickstart
+## Features
 
-1. Install [NVM](https://github.com/nvm-sh/nvm) and use latest Node LTS:
+- Dashboard with statistics
+- Device management (view, add test devices)
+- Scan management (view scans, trigger new scans)
+- Alerts viewing
+- Settings management
+
+## Prerequisites
+
+- Node.js (v16 or later)
+- npm or yarn
+- Running Sentinel Prime backend (accessible at http://localhost:8000)
+
+## Installation
+
+1. Install dependencies:
    ```bash
-   # Install NVM
-   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-   # Restart or reload your shell (see NVM docs)
-   nvm install --lts
-   nvm use --lts
-   # Install Expo CLI
-   npm install -g expo-cli
-   ```
-2. Install dependencies and start development server:
-   ```bash
-   cd web-ui/web-ui
    npm install
-   expo start
    ```
-3. The app will run in a browser, and can also be deployed to mobile devices
 
-## Project Structure
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-```
-web-ui/
-├── web-ui/
-│   ├── App.js                 # Main app with navigation
-│   ├── services/
-│   │   └── api.js            # Backend API service
-│   ├── screens/
-│   │   ├── DashboardScreen.js   # Overview with stats
-│   │   ├── DevicesScreen.js     # Device management (CRUD)
-│   │   ├── AlertsScreen.js      # Security alerts
-│   │   └── SettingsScreen.js    # App settings
-│   └── package.json
-└── README.md
+3. Open your browser to http://localhost:5173 (or the URL shown in the terminal)
+
+## Building for Production
+
+To build the webapp for production:
+
+```bash
+npm run build
 ```
 
-## Screens
+The built files will be in the `dist` directory.
 
-### Dashboard
-- Overview of total devices, online devices, pending alerts, critical alerts
-- Recent alerts list
-- Device list preview
+## Docker
 
-### Devices
-- List all network devices
-- Add/Edit/Delete devices
-- Filter by type and status
+To run the webapp in a Docker container (optional), you can create a Dockerfile:
 
-### Alerts
-- View all security alerts
-- Filter by status (All/Pending/Acknowledged)
-- Acknowledge alerts
+```dockerfile
+FROM node:18-alpine as builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-### Settings
-- Toggle notifications, email alerts, dark mode
-- Enable/disable honeypot, IPS/IDS
-- Network configuration
-- Data export options
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
 
-## API Integration
+Then build and run:
 
-The app connects to the backend at `http://localhost:8000`. Update `services/api.js` to change the API URL.
+```bash
+docker build -t sentinel-prime-webui .
+docker run -p 80:80 sentinel-prime-webui
+```
 
-## Contributing
-- Add screens or features modularly
-- Integrate backend API for data
-- UI is meant for web and mobile from the same codebase
+## API Endpoints Used
 
----
+The webapp interacts with the following backend endpoints:
 
-**Note:** The mobile app is included as part of this Expo project; all screens and features should support both platforms.
+- GET `/devices` - List all devices
+- POST `/devices` - Add a new device (test function)
+- GET `/scans` - List all scans
+- POST `/scans/network` - Trigger a new network scan
+- GET `/alerts` - List all alerts
+- GET `/settings` - List all settings
+- POST `/settings` - Update a setting
+
+Note: The vulnerabilities endpoint is not currently used in the UI but is available at `/scans/vulnerabilities`.
+
+## Customization
+
+To change the API URL, modify the API calls in the components to use a different base URL or environment variable.
+
+## License
+
+MIT

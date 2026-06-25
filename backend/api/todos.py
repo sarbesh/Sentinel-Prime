@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from database import get_session
-from models import User
+from models import User, Todo
 
 router = APIRouter(prefix="/todos", tags=["todos"])
 

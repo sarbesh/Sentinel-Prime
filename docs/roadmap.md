@@ -41,10 +41,25 @@ This document traces planned features, enhancements, and priorities for the proj
 - [ ] Report generation scripts (HTML)
 - [ ] UI/push/email notifications
 
-### 10. Docker Orchestration
+### 10. Voice Assistant Module (MCP/Agent)
+- [ ] Integrate Mycroft AI or similar for voice control/feedback
+- [ ] Develop event-driven speech and interactive device management logic
+
+### 11. NAC & Device Management
+- [ ] Scripts/UI for device isolation/kicking and network segmentation
+
+### 12. Anonymity & Traffic Routing
+- [ ] TOR/Proxy routing for selective/opt-in privacy
+- [ ] OpenVPN integration for secure encrypted access (low priority)
+
+### 13. Versatile Home-Lab Features
+- [ ] NAS module (low priority)
+- [ ] WSL compatibility enhancers
+
+### 14. Docker Orchestration
 - [ ] Compose setup for all modules
 
-### 11. Documentation & Community
+### 15. Documentation & Community
 - [x] Per-module READMEs
 - [x] ADRs, setup, contributing, roadmap
 

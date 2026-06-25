@@ -8,18 +8,37 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - sentinel-prime-data:/app/data
+      - backend-data:/data
       - ./web-ui/downloads:/app/downloads
+      - ./scanner:/scanner:ro
     environment:
-      - DATABASE_URL=sqlite:///sentinel_prime.db
+      - DATABASE_URL=sqlite:////data/sentinel_prime.db
+      - VECTOR_DB_URL=postgresql://postgres:postgres@vector-db:5432/vectordb
       - PYTHONUNBUFFERED=1
+      - UI_VERSION_SHA=${UI_VERSION_SHA}
     restart: unless-stopped
+    depends_on:
+      vector-db:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=1)"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  scanner:
+    build:
+      context: ./scanner
+      dockerfile: Dockerfile
+    container_name: sentinel-prime-scanner
+    volumes:
+      - ./scanner:/app
+    environment:
+      - API_URL=http://backend:8000
+    restart: unless-stopped
+    depends_on:
+      - backend
 
   ui:
     build:
@@ -34,29 +53,107 @@ services:
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      test: ["CMD", "curl", "-f", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Placeholder services for other modules (to be implemented)
-  # network-scanner:
-  #   build:
-  #     context: ./network-scanner
-  #   ...
+  vector-db:
+    image: pgvector/pgvector:pg16
+    container_name: sentinel-prime-vector-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=vectordb
+    ports:
+      - "5432:5432"
+    volumes:
+      - vector-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
-  # honeypot:
-  #   build:
-  #     context: ./honeypot
-  #   ...
+  mcp:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sentinel-prime-mcp
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app
+      - backend-data:/data
+    environment:
+      - DATABASE_URL=sqlite:////data/sentinel_prime.db
+      - MCP_PORT=8001
+      - MCP_API_KEY=${MCP_API_KEY:-sentinel-prime-mcp-default}
+    depends_on:
+      - backend
+    command: ["uvicorn", "mcp_server.server_sse:app", "--host", "0.0.0.0", "--port", "${MCP_PORT:-8001}"]
 
-  # ips-ids:
-  #   build:
-  #     context: ./ips-ids
-  #   ...
+  #   honeypot:
+#     build:
+#       context: ./honeypot
+#       dockerfile: Dockerfile
+#     container_name: sentinel-prime-honeypot
+#     network_mode: host
+#     volumes:
+#       - ./honeypot/config:/home/opencanary:ro
+#       - ./honeypot/logs:/var/log/opencanary
+#     environment:
+#       - API_URL=http://localhost:8000
+#     restart: unless-stopped
+#     depends_on:
+#       - backend
+  ips-ids:
+    build:
+      context: ./ips-ids
+      dockerfile: Dockerfile
+    container_name: sentinel-prime-ips-ids
+    network_mode: host
+    volumes:
+      - ./backend:/app
+      - backend-data:/data
+      - ./logs/suricata:/var/log/suricata
+    environment:
+      - DATABASE_URL=sqlite:////data/sentinel_prime.db
+      - MCP_PORT=8001
+      - MCP_API_KEY=${MCP_API_KEY:-sentinel-prime-mcp-default}
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - backend
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+  dhcp-listener:
+    build:
+      context: ./dhcp-listener
+      dockerfile: Dockerfile
+    container_name: sentinel-prime-dhcp-listener
+    network_mode: host
+    environment:
+      - BACKEND_URL=http://backend:8000
+      - INTERFACE=enp7s0
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
 
 volumes:
-  sentinel-prime-data:
+  backend-data:
+    driver: local
+  vector-data:
     driver: local
 
 networks:
