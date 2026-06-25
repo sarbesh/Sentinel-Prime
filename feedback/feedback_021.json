@@ -1,0 +1,21 @@
+{
+  "tester_name": "David Kim",
+  "hardware": "Raspberry Pi 3B+",
+  "network_size": "Apartment (10 devices)",
+  "expertise": "Low",
+  "deployment_time_minutes": 12,
+  "ratings": {
+    "device_discovery": 4.111809257760614,
+    "scanning": 4.3232120306584765,
+    "detection": 4.7554678848688825,
+    "ui": 4.378322929156602,
+    "performance": 4.4527359192062725
+  },
+  "positive_comment": "The dashboard is informative without being overwhelming.",
+  "bugs": [],
+  "feature_requests": [
+    "Ability to name devices instead of just MAC addresses"
+  ],
+  "would_recommend": true,
+  "submitted_at": "2026-06-19T08:31:11.503520"
+}

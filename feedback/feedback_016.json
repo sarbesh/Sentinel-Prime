@@ -1,0 +1,19 @@
+{
+  "tester_name": "Sarah Johnson",
+  "hardware": "Old Laptop (Core i5, 8GB)",
+  "network_size": "Home Office (15 devices)",
+  "expertise": "High",
+  "deployment_time_minutes": 5,
+  "ratings": {
+    "device_discovery": 5,
+    "scanning": 4.853135960775788,
+    "detection": 5,
+    "ui": 5,
+    "performance": 5
+  },
+  "positive_comment": "Resource usage is impressively low on my Pi 4.",
+  "bugs": [],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-14T08:31:11.503394"
+}

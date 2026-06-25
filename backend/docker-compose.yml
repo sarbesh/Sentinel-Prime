@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/sentinel_prime
+      - OTX_API_KEY=${OTX_API_KEY}
+      - ABUSECH_API_KEY=${ABUSECH_API_KEY}
+      - DHCP_LISTENER_INTERFACE=eth0
+      - DHCP_LISTENER_PORT=67
+      - THREAT_INTEL_UPDATE_INTERVAL=3600
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    networks:
+      - sentinel_net
+
+  # PostgreSQL with pgvector
+  db:
+    image: ankane/pgvector:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=sentinel_prime
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sentinel_net
+
+  # Optional: Redis for caching (if needed in future)
+  # redis:
+  #   image: redis:alpine
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - sentinel_net
+
+networks:
+  sentinel_net:
+    driver: bridge
+
+volumes:
+  postgres_data:

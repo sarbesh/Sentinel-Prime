@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Security Events Report{% endblock %}
+
+{% block content %}
+<h2>Security Alerts (IPS/IDS/System)</h2>
+{% if alerts %}
+<table>
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>Source</th>
+            <th>Severity</th>
+            <th>Title</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for alert in alerts %}
+        <tr>
+            <td>{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ alert.source }}</td>
+            <td class="severity-{{ alert.severity }}">{{ alert.severity.upper() }}</td>
+            <td>{{ alert.title }}</td>
+            <td>{{ alert.description or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No alerts found for the selected period.</p>
+{% endif %}
+
+<h2>Honeypot Activity</h2>
+{% if honeypot_events %}
+<table>
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>Source IP</th>
+            <th>Target IP</th>
+            <th>Protocol</th>
+            <th>Service</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for event in honeypot_events %}
+        <tr>
+            <td>{{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ event.source_ip }}</td>
+            <td>{{ event.destination_ip }}</td>
+            <td>{{ event.protocol or '-' }}</td>
+            <td>{{ event.service or '-' }}</td>
+            <td>{{ event.details or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No honeypot events found for the selected period.</p>
+{% endif %}
+{% endblock %}

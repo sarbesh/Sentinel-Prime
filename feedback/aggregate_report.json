@@ -1,0 +1,55 @@
+{
+  "num_testers": 25,
+  "average_ratings": {
+    "device_discovery": 4.0364907228944285,
+    "scanning": 4.100881963094869,
+    "detection": 4.245418240408802,
+    "ui": 4.213198592548185,
+    "performance": 4.044499694584008
+  },
+  "overall_rating": 4.128097842706059,
+  "recommendation_rate": 0.8226152338147761,
+  "bugs": [
+    {
+      "title": "Typo in settings page",
+      "count": 4
+    },
+    {
+      "title": "UI shows 404 for valid routes on slow networks",
+      "count": 4
+    },
+    {
+      "title": "High CPU usage on Raspberry Pi 3",
+      "count": 1
+    },
+    {
+      "title": "Scan results not updating in real-time",
+      "count": 1
+    },
+    {
+      "title": "Dark mode too dark on some monitors",
+      "count": 2
+    }
+  ],
+  "top_features": [
+    {
+      "request": "Ability to name devices instead of just MAC addresses",
+      "count": 2
+    },
+    {
+      "request": "Email alerts when botnet activity detected",
+      "count": 6
+    },
+    {
+      "request": "Mobile app for iOS/Android to monitor on the go",
+      "count": 2
+    }
+  ],
+  "sentiment": {
+    "positive": 80,
+    "neutral": 24,
+    "negative": 8
+  },
+  "assessment": "EXCELLENT",
+  "generated_at": "2026-06-23T08:31:11.621253"
+}

@@ -1,0 +1,19 @@
+{
+  "tester_name": "Alex Chen",
+  "hardware": "Raspberry Pi 4 (4GB)",
+  "network_size": "Home (25 devices)",
+  "expertise": "Medium",
+  "deployment_time_minutes": 5,
+  "ratings": {
+    "device_discovery": 4.775264738921707,
+    "scanning": 4.1970942108072835,
+    "detection": 4.602520943261545,
+    "ui": 4.530081927273376,
+    "performance": 4.050376389698967
+  },
+  "positive_comment": "Finally, a CUJO alternative that's actually open source!",
+  "bugs": [],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-11T08:31:11.503491"
+}

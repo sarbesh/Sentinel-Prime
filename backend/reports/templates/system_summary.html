@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}System Summary Report{% endblock %}
+
+{% block content %}
+<h2>System Overview</h2>
+<div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+    <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+        <h3>Total Devices</h3>
+        <p style="font-size: 2.5em; margin: 10px 0; color: #3498db;">{{ summary.total_devices }}</p>
+    </div>
+    <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+        <h3>Recent Scans</h3>
+        <p style="font-size: 2.5em; margin: 10px 0; color: #9b59b6;">{{ summary.recent_scans_count }}</p>
+    </div>
+    <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+        <h3>Active Alerts</h3>
+        <p style="font-size: 2.5em; margin: 10px 0; color: #e74c3c;">{{ summary.active_alerts_count }}</p>
+    </div>
+    <div class="card" style="flex: 1; min-width: 200px; text-align: center;">
+        <h3>Critical Vulns</h3>
+        <p style="font-size: 2.5em; margin: 10px 0; color: #c0392b;">{{ summary.critical_vulns_count }}</p>
+    </div>
+</div>
+
+<h2>Recent Security Alerts</h2>
+{% if alerts %}
+<table>
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>Source</th>
+            <th>Severity</th>
+            <th>Title</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for alert in alerts %}
+        <tr>
+            <td>{{ alert.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+            <td>{{ alert.source }}</td>
+            <td class="severity-{{ alert.severity }}">{{ alert.severity.upper() }}</td>
+            <td>{{ alert.title }}</td>
+            <td>{{ alert.description or '-' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No recent alerts found.</p>
+{% endif %}
+
+<h2>Last 5 Scans</h2>
+{% if scans %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Target</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Started At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for scan in scans %}
+        <tr>
+            <td>{{ scan.id }}</td>
+            <td>{{ scan.target }}</td>
+            <td>{{ scan.scan_type.upper() }}</td>
+            <td>{{ scan.status.upper() }}</td>
+            <td>{{ scan.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No recent scans found.</p>
+{% endif %}
+{% endblock %}

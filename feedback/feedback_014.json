@@ -1,0 +1,19 @@
+{
+  "tester_name": "Emma Wilson",
+  "hardware": "Intel NUC (J4125, 8GB)",
+  "network_size": "Home Lab (30 devices)",
+  "expertise": "Expert",
+  "deployment_time_minutes": 18,
+  "ratings": {
+    "device_discovery": 3.1206390895375047,
+    "scanning": 3.4307782686293833,
+    "detection": 3.603921538048606,
+    "ui": 3.512064893348905,
+    "performance": 3.354911979000532
+  },
+  "positive_comment": "Error messages are actually helpful when I mess up inputs.",
+  "bugs": [],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-12T08:31:11.503352"
+}

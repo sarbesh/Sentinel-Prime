@@ -1,0 +1,19 @@
+{
+  "tester_name": "Emma Wilson",
+  "hardware": "Intel NUC (J4125, 8GB)",
+  "network_size": "Home Lab (30 devices)",
+  "expertise": "Expert",
+  "deployment_time_minutes": 7,
+  "ratings": {
+    "device_discovery": 4.503514895297841,
+    "scanning": 4.262788913236126,
+    "detection": 4.193525904813953,
+    "ui": 4.4472971902943375,
+    "performance": 4.415708144369091
+  },
+  "positive_comment": "Detected all 23 devices on my network instantly!",
+  "bugs": [],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-14T08:31:11.503602"
+}

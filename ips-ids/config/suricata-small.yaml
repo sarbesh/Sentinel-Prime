@@ -1,0 +1,258 @@
+# Sentinel Prime - Suricata Configuration for SMALL Profile
+# Optimized for low-resource hardware (Router, Raspberry Pi Zero, <512MB RAM)
+# Single-threaded, minimal memory footprint, essential rules only
+# =============================================================================
+
+%YAML 1.1
+---
+
+# Run configuration
+max-pending-packets: 1024
+runmode: workers
+worker-threads: 1
+
+# PID file
+pid-file: /var/run/suricata.pid
+daemon: false
+
+# Configuration files
+classification-file: /etc/suricata/classification.config
+reference-config-file: /etc/suricata/reference.config
+threshold-file: /etc/suricata/threshold.config
+
+# =============================================================================
+# OUTPUT CONFIGURATION - Minimal for low resource
+# =============================================================================
+
+outputs:
+  # Fast log for quick alert viewing
+  - fast:
+      enabled: true
+      filename: fast.log
+      append: true
+
+  # EVE JSON for integration with sentinel-core
+  - eve-log:
+      enabled: true
+      filename: eve.json
+      filetype: regular
+      types:
+        - alert:
+            payload: no
+            payload-buffer-size: 4kb
+            payload-printable: yes
+            packet: no
+            metadata: yes
+            http: no
+            tls: no
+            ssh: no
+            flow: no
+        - stats:
+            enabled: yes
+            type: total
+
+  # Stats output
+  - stats:
+      enabled: true
+      filename: stats.log
+      interval: 60
+
+# =============================================================================
+# LOGGING - Reduced verbosity
+# =============================================================================
+
+logging:
+  default-log-level: warning
+  
+  outputs:
+    - console:
+        enabled: true
+        level: notice
+    - file:
+        enabled: true
+        level: warning
+        filename: /var/log/suricata/suricata.log
+
+# =============================================================================
+# NETWORK INTERFACES - AF_PACKET mode
+# =============================================================================
+
+af-packet:
+  - interface: eth0
+    cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+    use-mmap: yes
+    ring-size: 512
+    tpacket-v3: true
+
+# Fallback pcap mode
+pcap:
+  - interface: any
+
+# =============================================================================
+# APPLICATION LAYER PROTOCOLS - Minimal set
+# =============================================================================
+
+app-layer:
+  protocols:
+    tls:
+      enabled: false
+    http:
+      enabled: true
+      detection-ports:
+        dp: 80, 8080
+    dns:
+      enabled: true
+      detection-ports:
+        dp: 53
+    ssh:
+      enabled: false
+    smtp:
+      enabled: false
+    ftp:
+      enabled: false
+    rdp:
+      enabled: false
+
+# =============================================================================
+# DEFRAG - Minimal settings
+# =============================================================================
+
+defrag:
+  max-frags: 1024
+  prealloc: false
+  timeout: 30
+
+# =============================================================================
+# FLOW MANAGEMENT - Reduced memory
+# =============================================================================
+
+flow:
+  memcap: 64mb
+  hash-size: 16384
+  prealloc: 1000
+  emergency-recovery: 30
+
+flow-timeouts:
+  default:
+    new: 30
+    established: 120
+    closed: 60
+    bypassed: 100
+  tcp:
+    new: 30
+    established: 120
+    closed: 60
+  udp:
+    new: 30
+    established: 120
+  icmp:
+    new: 30
+    established: 120
+
+# =============================================================================
+# STREAM ENGINE - Minimal reassembly
+# =============================================================================
+
+stream:
+  memcap: 64mb
+  preallocated-sessions: 500
+  checksum-validation: yes
+  inline: auto
+  reassembly:
+    memcap: 64mb
+    depth: 1mb
+    toserver-chunk-size: 256
+    toclient-chunk-size: 256
+    randomized: false
+
+# =============================================================================
+# HOST POLICY
+# =============================================================================
+
+host-mode: auto
+
+# =============================================================================
+# NETWORK VARIABLES
+# =============================================================================
+
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+    HTTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "$HOME_NET"
+    TELNET_SERVERS: "$HOME_NET"
+    AIM_SERVERS: "$EXTERNAL_NET"
+    DC_SERVERS: "$HOME_NET"
+    DNP3_SERVER: "$HOME_NET"
+    DNP3_CLIENT: "$HOME_NET"
+    MODBUS_CLIENT: "$HOME_NET"
+    MODBUS_SERVER: "$HOME_NET"
+    ENIP_CLIENT: "$HOME_NET"
+    ENIP_SERVER: "$HOME_NET"
+    
+  port-groups:
+    HTTP_PORTS: "80,8080"
+    SHELLCODE_PORTS: "!80"
+    ORACLE_PORTS: 1521
+    SSH_PORTS: 22
+    DNP3_PORTS: 20000
+    MODBUS_PORTS: 502
+    FILE_DATA_PORTS: "[$HTTP_PORTS,110,143]"
+    FTP_PORTS: 21
+    GENEVE_PORTS: 6081
+    VXLAN_PORTS: 4789
+    TEREDO_PORTS: 3544
+
+# =============================================================================
+# RULE FILES - IoT botnet focused
+# =============================================================================
+
+rule-files:
+  - /var/lib/suricata/rules/iot-botnet.rules
+  - /var/lib/suricata/rules/custom.rules
+
+# =============================================================================
+# DETECTION ENGINE - Lightweight profile
+# =============================================================================
+
+detection:
+  profile: low
+  custom-values:
+    toclient-groups: 2
+    toserver-groups: 2
+  reassemble:
+    tcp:
+      enabled: true
+      depth: 262144
+
+# =============================================================================
+# PERFORMANCE TUNING - Conservative
+# =============================================================================
+
+cpu-affinity:
+  - management-cpu-set:
+      cpu: [ 0 ]
+  - receive-cpu-set:
+      cpu: [ 0 ]
+  - worker-cpu-set:
+      cpu: [ 0 ]
+
+# Hash table size
+hash-size: 2048
+
+# =============================================================================
+# PROFILING - Disabled for performance
+# =============================================================================
+
+profiling:
+  enabled: false
+
+# =============================================================================
+# DEFAULT ACTION FOR IPS MODE
+# =============================================================================
+
+default-rule-action: pass

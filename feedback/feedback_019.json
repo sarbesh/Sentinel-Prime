@@ -1,0 +1,28 @@
+{
+  "tester_name": "Alex Chen",
+  "hardware": "Raspberry Pi 4 (4GB)",
+  "network_size": "Home (25 devices)",
+  "expertise": "Medium",
+  "deployment_time_minutes": 12,
+  "ratings": {
+    "device_discovery": 3.8720111439785647,
+    "scanning": 4.288647518548949,
+    "detection": 4.525868461492488,
+    "ui": 4.365525253254731,
+    "performance": 4.442430236221952
+  },
+  "positive_comment": "The dashboard is informative without being overwhelming.",
+  "bugs": [
+    {
+      "title": "UI shows 404 for valid routes on slow networks",
+      "severity": "medium",
+      "description": "When network is slow, sometimes see 404 page briefly before content loads.",
+      "hardware": "Raspberry Pi 4 (4GB)"
+    }
+  ],
+  "feature_requests": [
+    "Email alerts when botnet activity detected"
+  ],
+  "would_recommend": true,
+  "submitted_at": "2026-06-13T08:31:11.503460"
+}

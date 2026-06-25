@@ -1,0 +1,21 @@
+{
+  "tester_name": "Sarah Johnson",
+  "hardware": "Old Laptop (Core i5, 8GB)",
+  "network_size": "Home Office (15 devices)",
+  "expertise": "High",
+  "deployment_time_minutes": 8,
+  "ratings": {
+    "device_discovery": 4.009050387215463,
+    "scanning": 4.436743823583009,
+    "detection": 4.364326043069055,
+    "ui": 4.212816152777842,
+    "performance": 4.135630853841153
+  },
+  "positive_comment": "The dashboard is informative without being overwhelming.",
+  "bugs": [],
+  "feature_requests": [
+    "Mobile app for iOS/Android to monitor on the go"
+  ],
+  "would_recommend": true,
+  "submitted_at": "2026-06-10T08:31:11.503132"
+}

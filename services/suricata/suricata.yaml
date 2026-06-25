@@ -1,0 +1,100 @@
+# Suricata IDS/IPS Configuration for Sentinel Prime
+# Optimized for low-resource devices (Raspberry Pi, IoT gateways)
+# Created by: Elena Volkov (Security Engineer)
+# Ticket: TICKET-0001
+
+%YAML 1.2
+---
+
+# Main Suricata configuration file for Sentinel Prime
+# Optimized for IoT botnet detection with minimal resource usage
+
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+  
+  port-groups:
+    HTTP_PORTS: "80"
+    SHELLCODE_PORTS: "!80"
+    ORACLE_PORTS: 1521
+    SSH_PORTS: "22"
+    
+# Default rule path
+default-rule-path: /etc/suricata/rules
+
+# Rule files to load
+rule-files:
+  - iot-botnet.rules
+  - emerging-threats.rules
+
+# Logging configuration
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert
+        - http
+        - dns
+        - tls
+        - files
+        - stats
+
+# Performance optimization for low-resource devices
+pcap:
+  buffer-size: 128mb
+  bpf-filter: "tcp or udp or icmp"
+
+# Threading - optimized for Raspberry Pi (4 threads max)
+threading:
+  set-cpu-affinity: yes
+  cpu-affinity:
+    - management-cpu-set:
+        cpu: [ 0 ]
+    - receive-cpu-set:
+        cpu: [ 0 ]
+    - worker-cpu-set:
+        cpu: [ 1, 2, 3 ]
+
+# Memory optimization
+max-pending-packets: 1024
+detect-engine:
+  max-signatures: 10000
+  max-signature-list-size: 1000
+  global-max-frame-size: 1mb
+
+# Enable protocol detection
+app-layer:
+  protocols:
+    http:
+      enabled: yes
+      libhtp:
+        max-request-body-length: 10kb
+        max-response-body-length: 10kb
+    tls:
+      enabled: yes
+    dns:
+      enabled: yes
+    ssh:
+      enabled: yes
+
+# Detection engine settings
+detect:
+  profile: low
+  custom-values:
+    toclient-groups: 2
+    toserver-groups: 2
+  sgh-mpm-context: auto
+  inspection-recursion-limit: 100
+
+# Logging level
+logging:
+  default-log-level: notice
+  outputs:
+    - console:
+        enabled: yes
+        level: info
+    - syslog:
+        enabled: no

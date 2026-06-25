@@ -1,0 +1,28 @@
+{
+  "tester_name": "Mike Rodriguez",
+  "hardware": "Raspberry Pi 4 (2GB)",
+  "network_size": "Small Business (50 devices)",
+  "expertise": "High",
+  "deployment_time_minutes": 19,
+  "ratings": {
+    "device_discovery": 3.600460591336069,
+    "scanning": 3.4966736997576104,
+    "detection": 3.732238381644937,
+    "ui": 3.7844801975013445,
+    "performance": 3.4244125977960693
+  },
+  "positive_comment": "Love the dark theme UI - looks professional and modern.",
+  "bugs": [
+    {
+      "title": "Scan results not updating in real-time",
+      "severity": "medium",
+      "description": "Have to manually refresh to see scan progress. Expected real-time updates.",
+      "hardware": "Raspberry Pi 4 (2GB)"
+    }
+  ],
+  "feature_requests": [
+    "Email alerts when botnet activity detected"
+  ],
+  "would_recommend": true,
+  "submitted_at": "2026-06-15T08:31:11.503439"
+}

@@ -1,0 +1,143 @@
+# Sentinel Prime - IoT Botnet Detection Rules
+# Specialized rules for detecting Mirai, Gafgyt, and other IoT malware
+# Based on known signatures, behavioral patterns, and C2 communication
+# Updated: 2026-06-22
+
+# =============================================================================
+# MIRAI BOTNET DETECTION RULES
+# =============================================================================
+
+# Mirai Telnet Exploitation Attempts
+alert tcp any any -> $HOME_NET 23 (msg:"MIRAI Telnet Login Attempt - admin/admin"; flow:to_server; content:"admin|0D0A|admin"; classtype:attempted-admin; sid:2000001; rev:1; reference:url,www.malware-traffic-analysis.net/2016/10/15/index.html;)
+alert tcp any any -> $HOME_NET 23 (msg:"MIRAI Telnet Login Attempt - root/jvc"; flow:to_server; content:"root|0D0A|jvc"; classtype:attempted-admin; sid:2000002; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"MIRAI Telnet Login Attempt - root/xc3511"; flow:to_server; content:"root|0D0A|xc3511"; classtype:attempted-admin; sid:2000003; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"MIRAI Telnet Login Attempt - root/123456"; flow:to_server; content:"root|0D0A|123456"; classtype:attempted-admin; sid:2000004; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"MIRAI Telnet Login Attempt - root/pass"; flow:to_server; content:"root|0D0A|pass"; classtype:attempted-admin; sid:2000005; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"MIRAI Telnet Login Attempt - root/default"; flow:to_server; content:"root|0D0A|default"; classtype:attempted-admin; sid:2000006; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"MIRAI Telnet Login Attempt - support/support"; flow:to_server; content:"support|0D0A|support"; classtype:attempted-admin; sid:2000007; rev:1;)
+
+# Mirai HTTP Exploitation
+alert tcp any any -> $HOME_NET 80 (msg:"MIRAI HTTP POST to /login"; flow:to_server; content:"POST /login"; http_method; content:"username=admin"; http_client_body; classtype:attempted-admin; sid:2000101; rev:1;)
+alert tcp any any -> $HOME_NET 8080 (msg:"MIRAI HTTP Exploit - HNAP"; flow:to_server; content:"POST"; http_method; content:"/HNAP1/"; http_uri; classtype:attempted-admin; sid:2000102; rev:1;)
+
+# Mirai C2 Communication Patterns
+alert tcp $HOME_NET any -> any 48101 (msg:"MIRAI C2 Communication - Port 48101"; flow:to_server; classtype:trojan-activity; sid:2000201; rev:1;)
+alert tcp $HOME_NET any -> any 65535 (msg:"MIRAI C2 Communication - Port 65535"; flow:to_server; classtype:trojan-activity; sid:2000202; rev:1;)
+alert tcp $HOME_NET any -> any 65534 (msg:"MIRAI C2 Communication - Port 65534"; flow:to_server; classtype:trojan-activity; sid:2000203; rev:1;)
+
+# Mirai Binary Download Patterns
+alert tcp any any -> $HOME_NET any (msg:"MIRAI Binary Download Attempt - wget tftp"; flow:to_server; content:"wget http"; http_method; content:"/bins/"; http_uri; classtype:trojan-activity; sid:2000301; rev:1;)
+alert tcp any any -> $HOME_NET any (msg:"MIRAI Binary Download Attempt - curl"; flow:to_server; content:"curl -O"; classtype:trojan-activity; sid:2000302; rev:1;)
+alert tcp any any -> $HOME_NET any (msg:"MIRAI Binary Download - ARM executable"; flow:to_server; content:"|4D 5A|"; content:"ARM"; classtype:trojan-activity; sid:2000303; rev:1;)
+
+# Mirai Scanning Activity
+alert tcp $HOME_NET any -> any 23 (msg:"MIRAI Outbound Telnet Scan"; flow:to_server; flags:S; detection_filter:track by_src,count 20,seconds 30; classtype:network-scan; sid:2000401; rev:1;)
+alert tcp $HOME_NET any -> any 2323 (msg:"MIRAI Outbound Telnet-Alt Scan"; flow:to_server; flags:S; detection_filter:track by_src,count 20,seconds 30; classtype:network-scan; sid:2000402; rev:1;)
+
+# =============================================================================
+# GAFGYT BOTNET DETECTION RULES
+# =============================================================================
+
+# Gafgyt Telnet Exploitation
+alert tcp any any -> $HOME_NET 23 (msg:"GAFGYT Telnet Login - root/1234"; flow:to_server; content:"root|0D0A|1234"; classtype:attempted-admin; sid:2001001; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"GAFGYT Telnet Login - root/12345"; flow:to_server; content:"root|0D0A|12345"; classtype:attempted-admin; sid:2001002; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"GAFGYT Telnet Login - root/123456"; flow:to_server; content:"root|0D0A|123456"; classtype:attempted-admin; sid:2001003; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"GAFGYT Telnet Login - admin/admin"; flow:to_server; content:"admin|0D0A|admin"; classtype:attempted-admin; sid:2001004; rev:1;)
+
+# Gafgyt HTTP Exploitation
+alert tcp any any -> $HOME_NET 80 (msg:"GAFGYT HTTP Exploit - Realtek"; flow:to_server; content:"POST"; http_method; content:"/login.cgi"; http_uri; classtype:attempted-admin; sid:2001101; rev:1;)
+alert tcp any any -> $HOME_NET 80 (msg:"GAFGYT HTTP Exploit - Netgear"; flow:to_server; content:";uname;"; http_uri; classtype:attempted-admin; sid:2001102; rev:1;)
+
+# Gafgyt C2 Patterns
+alert tcp $HOME_NET any -> any 1125 (msg:"GAFGYT C2 Communication - Port 1125"; flow:to_server; classtype:trojan-activity; sid:2001201; rev:1;)
+alert tcp $HOME_NET any -> any 9851 (msg:"GAFGYT C2 Communication - Port 9851"; flow:to_server; classtype:trojan-activity; sid:2001202; rev:1;)
+alert udp $HOME_NET any -> any 9851 (msg:"GAFGYT C2 UDP Beacon"; flow:to_server; classtype:trojan-activity; sid:2001203; rev:1;)
+
+# Gafgyt DDoS Patterns
+alert udp any any -> $HOME_NET any (msg:"GAFGYT UDP Flood Command"; content:"udp"; content:"flood"; classtype:attempted-dos; sid:2001301; rev:1;)
+alert tcp any any -> $HOME_NET any (msg:"GAFGYT TCP Flood Command"; content:"tcp"; content:"flood"; classtype:attempted-dos; sid:2001302; rev:1;)
+
+# =============================================================================
+# GENERAL IOT EXPLOITATION DETECTION
+# =============================================================================
+
+# Common IoT Default Credentials
+alert tcp any any -> $HOME_NET 23 (msg:"IoT Device - Default Telnet Login"; flow:to_server; content:"admin|0D0A|password"; classtype:attempted-admin; sid:2002001; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"IoT Device - Generic Root Login"; flow:to_server; content:"root|0D0A|root"; classtype:attempted-admin; sid:2002002; rev:1;)
+alert tcp any any -> $HOME_NET 22 (msg:"IoT Device - SSH Default Credentials"; flow:to_server; content:"root|0D0A|raspberry"; classtype:attempted-admin; sid:2002003; rev:1;)
+
+# IoT Protocol Anomalies
+alert tcp any any -> $HOME_NET 1883 (msg:"MQTT Connection Without Authentication"; flow:to_server; content:"CONNECT"; content:"|C0|"; classtype:policy-violation; sid:2002101; rev:1;)
+alert tcp any any -> $HOME_NET 502 (msg:"Modbus TCP Connection from External"; flow:to_server; classtype:policy-violation; sid:2002102; rev:1;)
+alert udp any any -> $HOME_NET 47808 (msg:"BACnet Connection from External"; classtype:policy-violation; sid:2002103; rev:1;)
+
+# UPnP Exploitation
+alert udp any any -> $HOME_NET 1900 (msg:"UPnP M-SEARCH from External"; content:"M-SEARCH"; classtype:attempted-recon; sid:2002201; rev:1;)
+alert tcp any any -> $HOME_NET any (msg:"UPnP Subscription Attack"; flow:to_server; content:"SUBSCRIBE"; http_method; content:"NOTIFY"; http_uri; classtype:attempted-admin; sid:2002202; rev:1;)
+
+# Camera/DVR Exploitation
+alert tcp any any -> $HOME_NET 37777 (msg:"DVR Login Attempt - Dahua"; flow:to_server; classtype:attempted-admin; sid:2002301; rev:1;)
+alert tcp any any -> $HOME_NET 34599 (msg:"DVR Exploit - TotalControl"; flow:to_server; classtype:attempted-admin; sid:2002302; rev:1;)
+alert tcp any any -> $HOME_NET 9000 (msg:"Hikvision CGI Exploit Attempt"; flow:to_server; content:"/ISAPI/"; http_uri; classtype:attempted-admin; sid:2002303; rev:1;)
+
+# =============================================================================
+# C2 COMMUNICATION PATTERNS
+# =============================================================================
+
+# Known C2 Ports
+alert tcp $HOME_NET any -> any 4444 (msg:"Potential C2 - Metasploit Default"; flow:to_server; classtype:trojan-activity; sid:2003001; rev:1;)
+alert tcp $HOME_NET any -> any 1337 (msg:"Potential C2 - Port 1337"; flow:to_server; classtype:trojan-activity; sid:2003002; rev:1;)
+alert tcp $HOME_NET any -> any 31337 (msg:"Potential C2 - Port 31337"; flow:to_server; classtype:trojan-activity; sid:2003003; rev:1;)
+alert tcp $HOME_NET any -> any 6667 (msg:"IRC C2 Communication"; flow:to_server; classtype:trojan-activity; sid:2003004; rev:1;)
+alert tcp $HOME_NET any -> any 6697 (msg:"IRC SSL C2 Communication"; flow:to_server; classtype:trojan-activity; sid:2003005; rev:1;)
+
+# DNS-based C2
+alert udp $HOME_NET any -> any 53 (msg:"Suspicious DNS Query - High Entropy"; flow:to_server; content:"|01 00 00 01|"; dns_query; content:"."; distance:0; isdataat:50,relative; classtype:trojan-activity; sid:2003101; rev:1;)
+alert udp $HOME_NET any -> any 53 (msg:"DNS TXT Record Request - Potential C2"; flow:to_server; content:"|00 00 00 01 00 00 00 00 00 00|"; content:"|00 10 00 01|"; within:20; classtype:trojan-activity; sid:2003102; rev:1;)
+
+# HTTP-based C2 Beacons
+alert tcp $HOME_NET any -> any $HTTP_PORTS (msg:"HTTP C2 Beacon - Regular Interval"; flow:to_server; flowbits:isset,http.request; threshold:type both,track by_src,count 10,seconds 300; classtype:trojan-activity; sid:2003201; rev:1;)
+
+# =============================================================================
+# OTHER IOT BOTNETS
+# =============================================================================
+
+# Reaper Botnet
+alert tcp any any -> $HOME_NET 23 (msg:"REAPER Telnet Exploit - Multiple Creds"; flow:to_server; content:"|0D|"; content:"login:"; distance:0; within:20; classtype:attempted-admin; sid:2004001; rev:1;)
+alert tcp any any -> $HOME_NET 23 (msg:"REAPER Telnet - Shell Command Injection"; flow:to_server; content:";id;"; classtype:attempted-admin; sid:2004002; rev:1;)
+
+# HideAndSeek Botnet
+alert tcp any any -> $HOME_NET 5555 (msg:"HideAndSeek Botnet - Port 5555"; flow:to_server; classtype:trojan-activity; sid:2004101; rev:1;)
+alert tcp any any -> $HOME_NET 8888 (msg:"HideAndSeek Botnet - Port 8888"; flow:to_server; classtype:trojan-activity; sid:2004102; rev:1;)
+
+# Okiru Botnet
+alert tcp any any -> $HOME_NET 23 (msg:"OKIRU Telnet Login Attempt"; flow:to_server; content:"root|0D0A|okirusample"; classtype:attempted-admin; sid:2004201; rev:1;)
+alert tcp $HOME_NET any -> any 9406 (msg:"OKIRU C2 Communication"; flow:to_server; classtype:trojan-activity; sid:2004202; rev:1;)
+
+# IoSHelper Botnet
+alert tcp any any -> $HOME_NET 23 (msg:"IoSHelper Telnet Exploit"; flow:to_server; content:"root|0D0A|ioshelper"; classtype:attempted-admin; sid:2004301; rev:1;)
+
+# Masscan-derived Scanning
+alert tcp $HOME_NET any -> any any (msg:"Masscan-derived Outbound Scan"; flow:to_server; flags:S; detection_filter:track by_src,count 100,seconds 10; classtype:network-scan; sid:2004401; rev:1;)
+
+# =============================================================================
+# EXPLOIT KITS AND VULNERABILITY SCANS
+# =============================================================================
+
+# EternalBlue SMB Exploit
+alert tcp any any -> $HOME_NET 445 (msg:"ETERNALBLUE SMBv1 Exploit Attempt"; flow:to_server; content:"|FF|SMB"; content:"|25|"; distance:38; within:1; classtype:attempted-admin; sid:2005001; rev:1; reference:cve,2017-0144;)
+
+# BlueKeep RDP Exploit
+alert tcp any any -> $HOME_NET 3389 (msg:"BLUEKEEP RDP Exploit Attempt"; flow:to_server; content:"|03|"; content:"|e0|"; distance:2; within:1; classtype:attempted-admin; sid:2005002; rev:1; reference:cve,2019-0708;)
+
+# Shellshock Exploit
+alert tcp any any -> $HOME_NET $HTTP_PORTS (msg:"SHELLSHOCK HTTP Exploit"; flow:to_server; content:"() { :;"; http_header; classtype:attempted-admin; sid:2005003; rev:1; reference:cve,2014-6271;)
+
+# Heartbleed Exploit
+alert tcp any any -> $HOME_NET 443 (msg:"HEARTBLEED TLS Exploit Attempt"; flow:to_server; content:"|18 03|"; content:"|00 01|"; distance:3; within:1; classtype:attempted-admin; sid:2005004; rev:1; reference:cve,2014-0160;)
+
+# Log4Shell Exploit
+alert tcp any any -> $HOME_NET $HTTP_PORTS (msg:"LOG4SHELL JNDI Injection"; flow:to_server; content:"${jndi:"; http_uri; nocase; classtype:attempted-admin; sid:2005005; rev:1; reference:cve,2021-44228;)
+
+# ProxyShell Exploit
+alert tcp any any -> $HOME_NET 443 (msg:"PROXYSHIELD Exchange Exploit"; flow:to_server; content:"/autodiscover/autodiscover.json"; http_uri; content:"<"; http_client_body; classtype:attempted-admin; sid:2005006; rev:1;)

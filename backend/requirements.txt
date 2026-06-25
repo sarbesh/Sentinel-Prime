@@ -1,0 +1,18 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pgvector
+scapy
+requests
+pydantic
+pydantic-settings
+
+pyoui
+mcp
+sqlmodel
+numpy
+jinja2
+
+# WebSocket for real-time updates
+websockets

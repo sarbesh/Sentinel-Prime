@@ -1,0 +1,31 @@
+from fastapi import FastAPI
+from app.core.config import settings
+from app.core.database import engine, Base
+from app.modules.dhcp_listener import listener
+from app.modules.threat_intel_updater import updater
+from app.modules.mcp import server as mcp_server
+import asyncio
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(title="SENTINEL PRIME Backend")
+
+# Include routers
+app.include_router(mcp_server.router)
+
+# Include routers or start background tasks
+@app.on_event("startup")
+async def startup_event():
+    # Start DHCP listener in background
+    asyncio.create_task(listener.start_listener())
+    # Start threat intelligence updater in background
+    asyncio.create_task(updater.start_updater())
+
+@app.get("/")
+async def root():
+    return {"message": "SENTINEL PRIME Backend is running"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}

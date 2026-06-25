@@ -1,0 +1,103 @@
+import { Link } from 'react-router-dom';
+
+const NotFoundPage = () => {
+  const isSuspicious = window.location.pathname.match(/(admin|wp-|phpmyadmin|\.env|config|backup)/i);
+  
+  // Log suspicious access attempt
+  if (isSuspicious) {
+    console.warn(`⚠️ Suspicious 404 access attempt: ${window.location.pathname}`);
+    // In production, send to backend for security logging
+  }
+  
+  return (
+    <div className="empty-state" style={{
+      textAlign: 'center',
+      padding: '4rem 2rem',
+      minHeight: '60vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div className="empty-state-icon" style={{ fontSize: '6rem', opacity: 0.5 }}>
+        🚫
+      </div>
+      <h1 style={{ 
+        fontSize: '4rem', 
+        fontWeight: '800',
+        background: 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        marginBottom: '1rem'
+      }}>
+        404
+      </h1>
+      <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#94a3b8' }}>
+        Page Not Found
+      </h2>
+      <p style={{ 
+        fontSize: '1.125rem', 
+        color: '#64748b', 
+        marginBottom: '2rem',
+        maxWidth: '500px'
+      }}>
+        The page you're looking for doesn't exist or has been moved.
+        {isSuspicious && (
+          <span style={{ display: 'block', marginTop: '1rem', color: '#ef4444' }}>
+            ⚠️ Suspicious path detected - this attempt has been logged.
+          </span>
+        )}
+      </p>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <p style={{ fontSize: '1rem', color: '#64748b', marginBottom: '0.5rem' }}>
+          You can go back to the homepage or visit one of the main sections below:
+        </p>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Link to="/" className="btn btn-outline" style={{ padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: '500' }}>
+            🏠 Home
+          </Link>
+          <Link to="/devices" className="btn btn-outline" style={{ padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: '500' }}>
+            📱 Devices
+          </Link>
+          <Link to="/scans" className="btn btn-outline" style={{ padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: '500' }}>
+            🔍 Scans
+          </Link>
+          <Link to="/alerts" className="btn btn-outline" style={{ padding: '0.5rem 1rem', borderRadius: '0.375rem', fontWeight: '500' }}>
+            🚨 Alerts
+          </Link>
+        </div>
+      </div>
+      <Link to="/" className="btn btn-primary" style={{
+        padding: '0.875rem 2rem',
+        borderRadius: '0.5rem',
+        textDecoration: 'none',
+        fontWeight: '600',
+        background: 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)',
+        color: 'white',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}>
+        ← Back to Home
+      </Link>
+      
+      {isSuspicious && (
+        <div style={{ 
+          marginTop: '3rem', 
+          padding: '1rem', 
+          background: 'rgba(239, 68, 68, 0.1)', 
+          borderRadius: '0.5rem', 
+          maxWidth: '600px'
+        }}>
+          <p style={{ fontSize: '0.875rem', color: '#ef4444' }}>
+            <strong>Security Notice:</strong> If you were trying to access an admin panel, 
+            please note that Sentinel Prime does not have a public admin interface. 
+            All administrative tasks are performed via the dashboard or CLI.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default NotFoundPage;

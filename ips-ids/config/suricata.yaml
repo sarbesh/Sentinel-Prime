@@ -1,0 +1,121 @@
+%YAML 1.1
+---
+max-pending-packets: 2048
+runmode: workers
+
+pid-file: /var/run/suricata.pid
+daemon: true
+classification-file: /etc/suricata/classification.config
+reference-config-file: /etc/suricata/reference.config
+
+outputs:
+  - fast:
+      enabled: true
+      filename: fast.log
+      append: true
+  - eve-log:
+      enabled: true
+      filename: eve.json
+      types:
+        - alert
+        - anomaly
+        # Keep high-volume protocol telemetry disabled by default. Enable only
+        # during focused debugging; otherwise this can fill the root filesystem
+        # quickly when /var/log/suricata is backed by Docker overlay storage.
+        # - http
+        # - dns
+        # - tls
+        # - ssh
+        # - stats
+  - stats:
+      enabled: true
+      filename: stats.log
+      interval: 300
+
+logging:
+  default-log-level: notice
+
+  outputs:
+    - console:
+        enabled: true
+        level: info
+    - file:
+        enabled: true
+        level: info
+        filename: /var/log/suricata/suricata.log
+
+af-packet:
+  - interface: enp7s0
+    copy-mode: ips
+    cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+    use-mmap: yes
+    ring-size: 2048
+
+pcap:
+  - interface: any
+
+app-layer:
+  protocols:
+    tls:
+      enabled: true
+      detection-ports:
+        dp: 443
+    http:
+      enabled: true
+      detection-ports:
+        dp: 80
+    smtp:
+      enabled: true
+      detection-ports:
+        dp: 25
+    ssh:
+      enabled: true
+      detection-ports:
+        dp: 22
+    dns:
+      enabled: true
+      detection-ports:
+        dp: 53
+
+defrag:
+  max-frags: 65536
+  prealloc: yes
+  timeout: 5
+
+flow:
+  memcap: 256mb
+  hash-size: 65536
+
+flow-timeouts:
+  new: 30
+  established: 300
+
+stream:
+  memcap: 256mb
+  reassembly:
+    memcap: 512mb
+    depth: 6mb
+
+host-mode: auto
+
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+  port-groups:
+    HTTP_PORTS: "80,443,8080,8443"
+
+rule-files:
+  - /var/lib/suricata/rules/*.rules
+
+detection:
+  profile: medium
+  reassemble:
+    tcp:
+      enabled: true
+      depth: 524288
+
+profiling:
+  enabled: false

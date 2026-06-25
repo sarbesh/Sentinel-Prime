@@ -1,0 +1,28 @@
+{
+  "tester_name": "Mike Rodriguez",
+  "hardware": "Raspberry Pi 4 (2GB)",
+  "network_size": "Small Business (50 devices)",
+  "expertise": "High",
+  "deployment_time_minutes": 20,
+  "ratings": {
+    "device_discovery": 4.237276304850604,
+    "scanning": 4.487717987189986,
+    "detection": 4.1689456484211345,
+    "ui": 4.333629775993841,
+    "performance": 3.9871778007385568
+  },
+  "positive_comment": "Finally, a CUJO alternative that's actually open source!",
+  "bugs": [
+    {
+      "title": "Typo in settings page",
+      "severity": "low",
+      "description": "\"Confiuration\" instead of \"Configuration\"",
+      "hardware": "Raspberry Pi 4 (2GB)"
+    }
+  ],
+  "feature_requests": [
+    "Email alerts when botnet activity detected"
+  ],
+  "would_recommend": true,
+  "submitted_at": "2026-06-18T08:31:11.503025"
+}

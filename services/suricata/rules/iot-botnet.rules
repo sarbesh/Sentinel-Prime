@@ -1,0 +1,101 @@
+# Sentinel Prime IoT Botnet Detection Rules
+# Curated by: Elena Volkov (Security Engineer)
+# Ticket: TICKET-0001
+# Focus: Mirai, Gafgyt, and IoT exploitation attempts
+
+# ============================================================================
+# MIRAI BOTNET DETECTION
+# ============================================================================
+
+# Mirai Scan - Telnet Brute Force
+alert tcp $EXTERNAL_NET any -> $HOME_NET 23 (msg:"SENTINEL Mirai telnet brute force attempt"; flow:to_server,established; content:"admin"; nocase; pcre:"/admin|root|support/i"; threshold:type threshold, track by_src, count 3, seconds 60; classtype:attempted-admin; sid:1000001; rev:1;)
+
+# Mirai Scan - SSH Brute Force
+alert tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"SENTINEL Mirai SSH brute force attempt"; flow:to_server,established; content:"root"; nocase; threshold:type threshold, track by_src, count 5, seconds 60; classtype:attempted-admin; sid:1000002; rev:1;)
+
+# Mirai C2 Communication - Known ports
+alert tcp $HOME_NET any -> $EXTERNAL_NET 23 (msg:"SENTINEL Possible Mirai C2 communication"; flow:to_server,established; content:"/bin/busybox"; nocase; classtype:trojan-activity; sid:1000003; rev:1;)
+
+# Mirai Architecture Scan
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"SENTINEL Mirai architecture probe"; flow:to_server,established; content:"|00 00 00 00|"; depth:4; classtype:network-scan; sid:1000004; rev:1;)
+
+# Mirai UDP Flood Attack
+alert udp $HOME_NET any -> $EXTERNAL_NET any (msg:"SENTINEL Mirai UDP flood detected"; dsize:>1000; threshold:type both,track by_src,count 100,seconds 10; classtype:attempted-dos; sid:1000005; rev:1;)
+
+# ============================================================================
+# GAFGYT BOTNET DETECTION
+# ============================================================================
+
+# Gafgyt Exploit - HTTP POST flood
+alert tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"SENTINEL Gafgyt HTTP POST flood"; flow:to_server,established; content:"POST"; http_method; threshold:type both,track by_src,count 50,seconds 10; classtype:attempted-dos; sid:1000006; rev:1;)
+
+# Gafgyt C2 - IRC Communication
+alert tcp $HOME_NET any -> $EXTERNAL_NET 6667 (msg:"SENTINEL Possible Gafgyt IRC C2"; flow:to_server,established; content:"NICK"; nocase; classtype:trojan-activity; sid:1000007; rev:1;)
+
+# Gafgyt ELF Download
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"SENTINEL Gafgyt ELF download attempt"; flow:to_client,established; content:"ELF"; content:"7f"; within:2; classtype:trojan-activity; sid:1000008; rev:1;)
+
+# ============================================================================
+# IOT EXPLOITATION ATTEMPTS
+# ============================================================================
+
+# IoT Device - Shell Injection
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"SENTINEL IoT shell injection attempt"; flow:to_server,established; pcre:"/[;|`]([^;|`]*);/"; classtype:web-application-attack; sid:1000009; rev:1;)
+
+# IoT Device - Command Injection in HTTP
+alert tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"SENTINEL IoT command injection via HTTP"; flow:to_server,established; content:"GET"; http_method; pcre:"/cmd=|exec=|system\\(/i"; classtype:web-application-attack; sid:1000010; rev:1;)
+
+# UPnP Exploitation
+alert udp $EXTERNAL_NET any -> $HOME_NET 1900 (msg:"SENTINEL UPnP exploitation attempt"; content:"M-SEARCH"; classtype:attempted-exploit; sid:1000011; rev:1;)
+
+# IoT Device - Unauthorized Firmware Update
+alert tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"SENTINEL Suspicious firmware update attempt"; flow:to_server,established; content:"Content-Type: application/octet-stream"; nocase; classtype:attempted-admin; sid:1000012; rev:1;)
+
+# ============================================================================
+# C2 COMMUNICATION PATTERNS
+# ============================================================================
+
+# Periodic Beaconing (C2 Check-in)
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"SENTINEL Periodic C2 beaconing detected"; flow:to_server,established; threshold:type both,track by_src,interpret as_ip,seconds 300,count 10; classtype:trojan-activity; sid:1000013; rev:1;)
+
+# DNS Tunneling - Long Domain Names
+alert dns $HOME_NET any -> any any (msg:"SENTINEL Possible DNS tunneling (long domain)"; dns.query; pcre:"/^[a-z0-9\\-]{30,}\\./i"; classtype:policy-violation; sid:1000014; rev:1;)
+
+# Encrypted C2 - Unusual TLS Certificate
+alert tls $HOME_NET any -> $EXTERNAL_NET any (msg:"SENTINEL Suspicious TLS certificate (self-signed C2)"; tls.store; tls.cert_subject:contains:"localhost"; classtype:trojan-activity; sid:1000015; rev:1;)
+
+# ============================================================================
+# RECONNAISSANCE & SCANNING
+# ============================================================================
+
+# Internal Network Scan
+alert tcp $HOME_NET any -> $HOME_NET any (msg:"SENTINEL Internal network scan detected"; flow:to_server; flags:S; threshold:type both,track by_src,seconds 60,count 20; classtype:network-scan; sid:1000016; rev:1;)
+
+# Port Sweep Detection
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"SENTINEL Port sweep detected"; flow:to_server; flags:S; threshold:type both,track by_src,seconds 10,count 15; classtype:attempted-recon; sid:1000017; rev:1;)
+
+# IoT Device Vulnerability Scan
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"SENTINEL IoT vulnerability scanner"; flow:to_server; content:"/cgi-bin/"; classtype:attempted-recon; sid:1000018; rev:1;)
+
+# ============================================================================
+# MALWARE DOWNLOAD & PROPAGATION
+# ============================================================================
+
+# Suspicious Binary Download
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"SENTINEL Suspicious binary download"; flow:to_client,established; content:"MZ"; content:"PE"; within:200; classtype:trojan-activity; sid:1000019; rev:1;)
+
+# IoT Malware Propagation Script
+alert tcp $EXTERNAL_NET any -> $HOME_NET 23 (msg:"SENTINEL IoT malware propagation script"; flow:to_server,established; content:"wget"; nocase; pcre:"/wget.*\\|.*sh|curl.*\\|.*bash/i"; classtype:trojan-activity; sid:1000020; rev:1;)
+
+# ============================================================================
+# DOS/DDOS ATTACKS
+# ============================================================================
+
+# SYN Flood Attack
+alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"SENTINEL SYN flood detected"; flow:to_server; flags:S; threshold:type both,track by_src,seconds 5,count 100; classtype:attempted-dos; sid:1000021; rev:1;)
+
+# HTTP GET Flood
+alert tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"SENTINEL HTTP GET flood"; flow:to_server,established; content:"GET"; http_method; threshold:type both,track by_src,seconds 10,count 50; classtype:attempted-dos; sid:1000022; rev:1;)
+
+# UDP Amplification Attack
+alert udp $EXTERNAL_NET any -> $HOME_NET 53 (msg:"SENTINEL DNS amplification attack"; dsize:>512; content:"|00 00 00 00 00 00 00 00|"; classtype:attempted-dos; sid:1000023; rev:1;)

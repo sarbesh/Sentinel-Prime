@@ -1,0 +1,283 @@
+# Sentinel Prime - Suricata Configuration for MEDIUM Profile
+# Optimized for Raspberry Pi 4/5, Mini PCs (1-4GB RAM)
+# Dual-threaded, balanced memory and detection capabilities
+# =============================================================================
+
+%YAML 1.1
+---
+
+# Run configuration
+max-pending-packets: 2048
+runmode: workers
+worker-threads: 2
+
+# PID file
+pid-file: /var/run/suricata.pid
+daemon: false
+
+# Configuration files
+classification-file: /etc/suricata/classification.config
+reference-config-file: /etc/suricata/reference.config
+threshold-file: /etc/suricata/threshold.config
+
+# =============================================================================
+# OUTPUT CONFIGURATION - Balanced
+# =============================================================================
+
+outputs:
+  # Fast log for quick alert viewing
+  - fast:
+      enabled: true
+      filename: fast.log
+      append: true
+
+  # EVE JSON for integration with sentinel-core
+  - eve-log:
+      enabled: true
+      filename: eve.json
+      filetype: regular
+      types:
+        - alert:
+            payload: no
+            payload-buffer-size: 4kb
+            payload-printable: yes
+            packet: no
+            metadata: yes
+            http: yes
+            tls: no
+            ssh: no
+            flow: yes
+        - http:
+            enabled: yes
+            format: extended
+        - dns:
+            enabled: yes
+            format: extended
+        - tls:
+            enabled: no
+        - ssh:
+            enabled: no
+        - stats:
+            enabled: yes
+            type: total
+
+  # Stats output
+  - stats:
+      enabled: true
+      filename: stats.log
+      interval: 30
+
+# =============================================================================
+# LOGGING - Standard verbosity
+# =============================================================================
+
+logging:
+  default-log-level: notice
+  
+  outputs:
+    - console:
+        enabled: true
+        level: info
+    - file:
+        enabled: true
+        level: notice
+        filename: /var/log/suricata/suricata.log
+
+# =============================================================================
+# NETWORK INTERFACES - AF_PACKET with clustering
+# =============================================================================
+
+af-packet:
+  - interface: eth0
+    cluster-id: 99
+    cluster-type: cluster_flow
+    defrag: yes
+    use-mmap: yes
+    ring-size: 2048
+    tpacket-v3: true
+    tx-ring-size: 2048
+
+# Fallback pcap mode
+pcap:
+  - interface: any
+
+# =============================================================================
+# APPLICATION LAYER PROTOCOLS - Standard set
+# =============================================================================
+
+app-layer:
+  protocols:
+    tls:
+      enabled: true
+      ja3-fingerprints: false
+      detection-ports:
+        dp: 443
+    http:
+      enabled: true
+      http2-inspection: false
+      detection-ports:
+        dp: 80, 8080, 443, 8443
+    dns:
+      enabled: true
+      detection-ports:
+        dp: 53
+    ssh:
+      enabled: true
+      detection-ports:
+        dp: 22
+    smtp:
+      enabled: false
+    ftp:
+      enabled: true
+      detection-ports:
+        dp: 21
+    rdp:
+      enabled: false
+    dhcp:
+      enabled: true
+
+# =============================================================================
+# DEFRAG - Moderate settings
+# =============================================================================
+
+defrag:
+  max-frags: 8192
+  prealloc: false
+  timeout: 60
+
+# =============================================================================
+# FLOW MANAGEMENT - Moderate memory
+# =============================================================================
+
+flow:
+  memcap: 256mb
+  hash-size: 65536
+  prealloc: 5000
+  emergency-recovery: 30
+
+flow-timeouts:
+  default:
+    new: 30
+    established: 300
+    closed: 60
+    bypassed: 100
+  tcp:
+    new: 30
+    established: 300
+    closed: 60
+  udp:
+    new: 30
+    established: 300
+  icmp:
+    new: 30
+    established: 300
+
+# =============================================================================
+# STREAM ENGINE - Moderate reassembly
+# =============================================================================
+
+stream:
+  memcap: 256mb
+  preallocated-sessions: 2000
+  checksum-validation: yes
+  inline: auto
+  reassembly:
+    memcap: 256mb
+    depth: 4mb
+    toserver-chunk-size: 512
+    toclient-chunk-size: 512
+    randomized: false
+
+# =============================================================================
+# HOST POLICY
+# =============================================================================
+
+host-mode: auto
+
+# =============================================================================
+# NETWORK VARIABLES
+# =============================================================================
+
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+    HTTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "$HOME_NET"
+    TELNET_SERVERS: "$HOME_NET"
+    AIM_SERVERS: "$EXTERNAL_NET"
+    DC_SERVERS: "$HOME_NET"
+    DNP3_SERVER: "$HOME_NET"
+    DNP3_CLIENT: "$HOME_NET"
+    MODBUS_CLIENT: "$HOME_NET"
+    MODBUS_SERVER: "$HOME_NET"
+    ENIP_CLIENT: "$HOME_NET"
+    ENIP_SERVER: "$HOME_NET"
+    
+  port-groups:
+    HTTP_PORTS: "80,8080,443,8443"
+    SHELLCODE_PORTS: "!80"
+    ORACLE_PORTS: 1521
+    SSH_PORTS: 22
+    DNP3_PORTS: 20000
+    MODBUS_PORTS: 502
+    FILE_DATA_PORTS: "[$HTTP_PORTS,110,143]"
+    FTP_PORTS: 21
+    GENEVE_PORTS: 6081
+    VXLAN_PORTS: 4789
+    TEREDO_PORTS: 3544
+
+# =============================================================================
+# RULE FILES - Full IoT botnet detection
+# =============================================================================
+
+rule-files:
+  - /var/lib/suricata/rules/iot-botnet.rules
+  - /var/lib/suricata/rules/custom.rules
+  - /var/lib/suricata/rules/emerging-threats.rules
+  - /var/lib/suricata/rules/abuse-ch.rules
+
+# =============================================================================
+# DETECTION ENGINE - Medium profile
+# =============================================================================
+
+detection:
+  profile: medium
+  custom-values:
+    toclient-groups: 4
+    toserver-groups: 4
+  reassemble:
+    tcp:
+      enabled: true
+      depth: 524288
+
+# =============================================================================
+# PERFORMANCE TUNING - Balanced
+# =============================================================================
+
+cpu-affinity:
+  - management-cpu-set:
+      cpu: [ 0 ]
+  - receive-cpu-set:
+      cpu: [ 0, 1 ]
+  - worker-cpu-set:
+      cpu: [ 0, 1 ]
+
+# Hash table size
+hash-size: 4096
+
+# =============================================================================
+# PROFILING - Optional
+# =============================================================================
+
+profiling:
+  enabled: false
+  locks-enabled: false
+  threads-enabled: false
+
+# =============================================================================
+# DEFAULT ACTION FOR IPS MODE
+# =============================================================================
+
+default-rule-action: pass

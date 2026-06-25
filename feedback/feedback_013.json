@@ -1,0 +1,26 @@
+{
+  "tester_name": "Mike Rodriguez",
+  "hardware": "Raspberry Pi 4 (2GB)",
+  "network_size": "Small Business (50 devices)",
+  "expertise": "High",
+  "deployment_time_minutes": 13,
+  "ratings": {
+    "device_discovery": 3.8803758691960684,
+    "scanning": 4.528085541914932,
+    "detection": 4.388761362028304,
+    "ui": 4.194287913731292,
+    "performance": 4.29193539129249
+  },
+  "positive_comment": "Love the dark theme UI - looks professional and modern.",
+  "bugs": [
+    {
+      "title": "High CPU usage on Raspberry Pi 3",
+      "severity": "critical",
+      "description": "CPU stays at 80%+ even when idle. Pi 4 works fine though.",
+      "hardware": "Raspberry Pi 4 (2GB)"
+    }
+  ],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-10T08:31:11.503328"
+}

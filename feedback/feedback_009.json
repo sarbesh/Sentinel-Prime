@@ -1,0 +1,19 @@
+{
+  "tester_name": "David Kim",
+  "hardware": "Raspberry Pi 3B+",
+  "network_size": "Apartment (10 devices)",
+  "expertise": "Low",
+  "deployment_time_minutes": 5,
+  "ratings": {
+    "device_discovery": 3.284353018739592,
+    "scanning": 3.383631215151125,
+    "detection": 3.6514589550465164,
+    "ui": 3.49952310515299,
+    "performance": 3.113999028019475
+  },
+  "positive_comment": "Error messages are actually helpful when I mess up inputs.",
+  "bugs": [],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-11T08:31:11.503219"
+}

@@ -1,0 +1,28 @@
+{
+  "tester_name": "Alex Chen",
+  "hardware": "Raspberry Pi 4 (4GB)",
+  "network_size": "Home (25 devices)",
+  "expertise": "Medium",
+  "deployment_time_minutes": 16,
+  "ratings": {
+    "device_discovery": 3.9466132095428446,
+    "scanning": 3.8916862385535356,
+    "detection": 4.066675363750035,
+    "ui": 3.9658451002806827,
+    "performance": 4.070493517226668
+  },
+  "positive_comment": "Installation was super easy! Docker compose up and it just worked.",
+  "bugs": [
+    {
+      "title": "Typo in settings page",
+      "severity": "low",
+      "description": "\"Confiuration\" instead of \"Configuration\"",
+      "hardware": "Raspberry Pi 4 (4GB)"
+    }
+  ],
+  "feature_requests": [
+    "Ability to name devices instead of just MAC addresses"
+  ],
+  "would_recommend": true,
+  "submitted_at": "2026-06-22T08:31:11.502868"
+}

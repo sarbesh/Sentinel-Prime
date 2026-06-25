@@ -1,0 +1,26 @@
+{
+  "tester_name": "Alex Chen",
+  "hardware": "Raspberry Pi 4 (4GB)",
+  "network_size": "Home (25 devices)",
+  "expertise": "Medium",
+  "deployment_time_minutes": 20,
+  "ratings": {
+    "device_discovery": 4.142092813003022,
+    "scanning": 4.2781946019297825,
+    "detection": 4.178530611613263,
+    "ui": 4.50632435078791,
+    "performance": 4.418504016109604
+  },
+  "positive_comment": "Finally, a CUJO alternative that's actually open source!",
+  "bugs": [
+    {
+      "title": "Dark mode too dark on some monitors",
+      "severity": "low",
+      "description": "Can't read text on my old LCD monitor. Maybe add contrast option?",
+      "hardware": "Raspberry Pi 4 (4GB)"
+    }
+  ],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-15T08:31:11.503571"
+}

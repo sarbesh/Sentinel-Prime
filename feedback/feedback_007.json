@@ -1,0 +1,26 @@
+{
+  "tester_name": "Alex Chen",
+  "hardware": "Raspberry Pi 4 (4GB)",
+  "network_size": "Home (25 devices)",
+  "expertise": "Medium",
+  "deployment_time_minutes": 10,
+  "ratings": {
+    "device_discovery": 4.622663698616463,
+    "scanning": 4.370594017173702,
+    "detection": 4.601840110392149,
+    "ui": 4.714976040435898,
+    "performance": 4.745910794524876
+  },
+  "positive_comment": "Installation was super easy! Docker compose up and it just worked.",
+  "bugs": [
+    {
+      "title": "Typo in settings page",
+      "severity": "low",
+      "description": "\"Confiuration\" instead of \"Configuration\"",
+      "hardware": "Raspberry Pi 4 (4GB)"
+    }
+  ],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-16T08:31:11.503153"
+}

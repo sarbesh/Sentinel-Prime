@@ -1,0 +1,21 @@
+{
+  "tester_name": "Emma Wilson",
+  "hardware": "Intel NUC (J4125, 8GB)",
+  "network_size": "Home Lab (30 devices)",
+  "expertise": "Expert",
+  "deployment_time_minutes": 18,
+  "ratings": {
+    "device_discovery": 4.292430645337189,
+    "scanning": 4.313848972969527,
+    "detection": 4.694231173367225,
+    "ui": 4.1828775077513605,
+    "performance": 4.204934444934975
+  },
+  "positive_comment": "The dashboard is informative without being overwhelming.",
+  "bugs": [],
+  "feature_requests": [
+    "Email alerts when botnet activity detected"
+  ],
+  "would_recommend": true,
+  "submitted_at": "2026-06-19T08:31:11.503086"
+}

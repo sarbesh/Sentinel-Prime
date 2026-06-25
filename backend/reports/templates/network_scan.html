@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Report: {{ scan.id }}{% endblock %}
+
+{% block content %}
+<h2>Scan Details</h2>
+<div class="card">
+    <p><strong>Scan ID:</strong> {{ scan.id }}</p>
+    <p><strong>Target:</strong> {{ scan.target }}</p>
+    <p><strong>Type:</strong> {{ scan.scan_type.upper() }}</p>
+    <p><strong>Status:</strong> {{ scan.status.upper() }}</p>
+    <p><strong>Started:</strong> {{ scan.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+    {% if scan.completed_at %}
+    <p><strong>Completed:</strong> {{ scan.completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+    {% endif %}
+</div>
+
+{% if vulnerabilities %}
+<h2>Vulnerabilities Discovered</h2>
+{% if vulnerabilities %}
+<table>
+    <thead>
+        <tr>
+            <th>CVE ID</th>
+            <th>Title</th>
+            <th>Severity</th>
+            <th>CVSS</th>
+            <th>Service/Port</th>
+            <th>Exploit Available</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vuln in vulnerabilities %}
+        <tr>
+            <td>{{ vuln.cve_id or '-' }}</td>
+            <td>{{ vuln.title }}</td>
+            <td class="severity-{{ vuln.severity }}">{{ vuln.severity.upper() }}</td>
+            <td>{{ vuln.cvss_score or '-' }}</td>
+            <td>{{ vuln.service or '-' }}:{{ vuln.port or '-' }}</td>
+            <td>{{ 'YES' if vuln.exploit_available else 'NO' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No vulnerabilities were found during this scan.</p>
+{% endif %}
+{% endif %}
+
+{% if raw_output %}
+<h2>Raw Scan Output</h2>
+<div class="card" style="background: #2c3e50; color: #ecf0f1; font-family: monospace; white-space: pre-wrap; overflow-x: auto;">
+{{ raw_output }}
+</div>
+{% endif %}
+{% endblock %}

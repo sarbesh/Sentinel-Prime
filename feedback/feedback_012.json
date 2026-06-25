@@ -1,0 +1,21 @@
+{
+  "tester_name": "David Kim",
+  "hardware": "Raspberry Pi 3B+",
+  "network_size": "Apartment (10 devices)",
+  "expertise": "Low",
+  "deployment_time_minutes": 16,
+  "ratings": {
+    "device_discovery": 4.314499934843091,
+    "scanning": 4.17954115559531,
+    "detection": 4.6532126469332304,
+    "ui": 4.710544220012853,
+    "performance": 4.27402141139826
+  },
+  "positive_comment": "Resource usage is impressively low on my Pi 4.",
+  "bugs": [],
+  "feature_requests": [
+    "Email alerts when botnet activity detected"
+  ],
+  "would_recommend": true,
+  "submitted_at": "2026-06-16T08:31:11.503304"
+}

@@ -1,0 +1,19 @@
+{
+  "tester_name": "Alex Chen",
+  "hardware": "Raspberry Pi 4 (4GB)",
+  "network_size": "Home (25 devices)",
+  "expertise": "Medium",
+  "deployment_time_minutes": 16,
+  "ratings": {
+    "device_discovery": 3.977281170711137,
+    "scanning": 4.44309702063238,
+    "detection": 4.249771316820407,
+    "ui": 4.421142831285756,
+    "performance": 4.168760930131543
+  },
+  "positive_comment": "Error messages are actually helpful when I mess up inputs.",
+  "bugs": [],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-10T08:31:11.503417"
+}

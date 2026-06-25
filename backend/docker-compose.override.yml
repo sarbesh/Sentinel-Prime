@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  # Frontend Web UI
+  webui:
+    build:
+      context: ../apps/web-ui
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - sentinel_net
+
+networks:
+  sentinel_net:
+    external: true

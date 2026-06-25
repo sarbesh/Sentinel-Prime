@@ -1,0 +1,19 @@
+{
+  "tester_name": "Mike Rodriguez",
+  "hardware": "Raspberry Pi 4 (2GB)",
+  "network_size": "Small Business (50 devices)",
+  "expertise": "High",
+  "deployment_time_minutes": 12,
+  "ratings": {
+    "device_discovery": 5,
+    "scanning": 5,
+    "detection": 5,
+    "ui": 5,
+    "performance": 4.817632241079886
+  },
+  "positive_comment": "Love the dark theme UI - looks professional and modern.",
+  "bugs": [],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-11T08:31:11.503050"
+}

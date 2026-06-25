@@ -1,0 +1,26 @@
+{
+  "tester_name": "Emma Wilson",
+  "hardware": "Intel NUC (J4125, 8GB)",
+  "network_size": "Home Lab (30 devices)",
+  "expertise": "Expert",
+  "deployment_time_minutes": 8,
+  "ratings": {
+    "device_discovery": 3.6103450043965304,
+    "scanning": 3.3357812191915874,
+    "detection": 3.661156176041988,
+    "ui": 3.7765198378611835,
+    "performance": 3.4821337757066484
+  },
+  "positive_comment": "Resource usage is impressively low on my Pi 4.",
+  "bugs": [
+    {
+      "title": "Typo in settings page",
+      "severity": "low",
+      "description": "\"Confiuration\" instead of \"Configuration\"",
+      "hardware": "Intel NUC (J4125, 8GB)"
+    }
+  ],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-23T08:31:11.503248"
+}

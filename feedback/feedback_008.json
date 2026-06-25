@@ -1,0 +1,26 @@
+{
+  "tester_name": "Alex Chen",
+  "hardware": "Raspberry Pi 4 (4GB)",
+  "network_size": "Home (25 devices)",
+  "expertise": "Medium",
+  "deployment_time_minutes": 13,
+  "ratings": {
+    "device_discovery": 3.733705717163711,
+    "scanning": 3.537597759371598,
+    "detection": 3.844090867179209,
+    "ui": 3.789403564500831,
+    "performance": 3.1244271830501007
+  },
+  "positive_comment": "Installation was super easy! Docker compose up and it just worked.",
+  "bugs": [
+    {
+      "title": "UI shows 404 for valid routes on slow networks",
+      "severity": "medium",
+      "description": "When network is slow, sometimes see 404 page briefly before content loads.",
+      "hardware": "Raspberry Pi 4 (4GB)"
+    }
+  ],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-19T08:31:11.503184"
+}

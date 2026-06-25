@@ -1,0 +1,26 @@
+{
+  "tester_name": "Sarah Johnson",
+  "hardware": "Old Laptop (Core i5, 8GB)",
+  "network_size": "Home Office (15 devices)",
+  "expertise": "High",
+  "deployment_time_minutes": 20,
+  "ratings": {
+    "device_discovery": 4.090229617135792,
+    "scanning": 4.603404445734185,
+    "detection": 4.51138070699932,
+    "ui": 4.490132302404551,
+    "performance": 4.585365849707334
+  },
+  "positive_comment": "Love the dark theme UI - looks professional and modern.",
+  "bugs": [
+    {
+      "title": "UI shows 404 for valid routes on slow networks",
+      "severity": "medium",
+      "description": "When network is slow, sometimes see 404 page briefly before content loads.",
+      "hardware": "Old Laptop (Core i5, 8GB)"
+    }
+  ],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-17T08:31:11.503277"
+}

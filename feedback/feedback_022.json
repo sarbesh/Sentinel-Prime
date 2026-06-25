@@ -1,0 +1,26 @@
+{
+  "tester_name": "Alex Chen",
+  "hardware": "Raspberry Pi 4 (4GB)",
+  "network_size": "Home (25 devices)",
+  "expertise": "Medium",
+  "deployment_time_minutes": 19,
+  "ratings": {
+    "device_discovery": 3.8106769183310334,
+    "scanning": 3.933141297651893,
+    "detection": 3.686315105382326,
+    "ui": 4.028019336828421,
+    "performance": 3.7128384613225074
+  },
+  "positive_comment": "Detected all 23 devices on my network instantly!",
+  "bugs": [
+    {
+      "title": "Dark mode too dark on some monitors",
+      "severity": "low",
+      "description": "Can't read text on my old LCD monitor. Maybe add contrast option?",
+      "hardware": "Raspberry Pi 4 (4GB)"
+    }
+  ],
+  "feature_requests": [],
+  "would_recommend": true,
+  "submitted_at": "2026-06-22T08:31:11.503545"
+}

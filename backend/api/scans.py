@@ -1,0 +1,560 @@
+import json
+import logging
+import re
+import subprocess
+import ipaddress
+from datetime import datetime
+from typing import List, Optional
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from pydantic import BaseModel
+from sqlmodel import Session, select
+
+from database import get_session
+from models import (
+    Alert,
+    AlertSeverity,
+    Device,
+    DeviceStatus,
+    DeviceType,
+    Scan,
+    ScanData,
+    ScanStatus,
+    ScanType,
+    Vulnerability,
+    VulnerabilitySeverity,
+)
+import vector_store
+from api.sse import broadcast_scan
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def is_valid_target(target: str) -> bool:
+    """Validate target as IP address or CIDR network."""
+    target = target.strip()
+    if not target:
+        return False
+    # Try IP address (IPv4/IPv6)
+    try:
+        ipaddress.ip_address(target)
+        return True
+    except ValueError:
+        pass
+    # Try CIDR network
+    try:
+        ipaddress.ip_network(target, strict=False)
+        return True
+    except ValueError:
+        pass
+    return False
+
+
+router = APIRouter(prefix="/scans", tags=["scans"])
+
+
+def generate_ai_summary(host: dict, vulnerabilities: list) -> str:
+    """Generate AI/LLM ready summary of scan results."""
+    parts = [
+        f"Host: {host.get('ip_address', host.get('ip', 'unknown'))}",
+    ]
+    
+    if host.get("hostname"):
+        parts.append(f"Hostname: {host['hostname']}")
+    
+    if host.get("mac"):
+        parts.append(f"MAC: {host['mac']}")
+    
+    if host.get("vendor"):
+        parts.append(f"Vendor: {host['vendor']}")
+    
+    if host.get("os"):
+        parts.append(f"OS: {host['os']}")
+    
+    if host.get("services"):
+        services = [f"{s.get('service', 'unknown')}({s.get('port', '')}/{s.get('protocol', '')})" for s in host["services"]]
+        parts.append(f"Open Ports/Services: {', '.join(services)}")
+    
+    if vulnerabilities:
+        critical = [v for v in vulnerabilities if v.get("severity") == "critical"]
+        high = [v for v in vulnerabilities if v.get("severity") == "high"]
+        
+        if critical:
+            parts.append(f"CRITICAL VULNERABILITIES: {len(critical)} found")
+            for v in critical:
+                parts.append(f"  - {v.get('title', 'Unknown')} (CVE: {v.get('cve', 'N/A')})")
+        
+        if high:
+            parts.append(f"HIGH VULNERABILITIES: {len(high)} found")
+            for v in high:
+                parts.append(f"  - {v.get('title', 'Unknown')} (CVE: {v.get('cve', 'N/A')})")
+    
+    return " | ".join(parts)
+
+
+class NetworkScanRequest(BaseModel):
+    target: str
+    scan_type: ScanType
+    ports: Optional[str] = None
+
+
+class VulnerabilityResponse(BaseModel):
+    id: Optional[int] = None
+    device_id: Optional[int] = None
+    scan_id: Optional[int] = None
+    cve_id: Optional[str] = None
+    title: str
+    description: Optional[str] = None
+    severity: VulnerabilitySeverity
+    cvss_score: Optional[float] = None
+    service: Optional[str] = None
+    port: Optional[int] = None
+    protocol: Optional[str] = None
+    exploit_available: bool = False
+    exploit_details: Optional[str] = None
+    remediation: Optional[str] = None
+    discovered_at: Optional[datetime] = None
+
+
+SCANNER_PATH = "/scanner/scanner.py"
+
+
+def run_scanner(target: str, scan_type: str, ports: Optional[str] = None) -> dict:
+    cmd = ["python3", SCANNER_PATH, target, scan_type]
+    if ports:
+        cmd.append(ports)
+    
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        if result.returncode == 0:
+            return json.loads(result.stdout)
+        else:
+            logger.error(f"Scanner error: {result.stderr}")
+            return {"status": "error", "message": result.stderr}
+    except subprocess.TimeoutExpired:
+        return {"status": "error", "message": "Scan timeout"}
+    except Exception as e:
+        logger.error(f"Scanner failed: {e}")
+        return {"status": "error", "message": str(e)}
+
+
+def process_scan_results(session: Session, scan: Scan, result: dict):
+    """Helper to process scan results and update database."""
+    scan.results = json.dumps(result, default=str)
+
+    if result.get("status") == "success":
+        scan.status = ScanStatus.COMPLETED
+        scan.hosts_discovered = len(result.get("hosts", []))
+        scan.failed_hosts = len(result.get("failed_hosts", []))  # Track failed attempts
+    else:
+        scan.status = ScanStatus.FAILED
+        scan.error_message = result.get("message", "Unknown error")
+        session.commit()
+        return
+
+    for host in result.get("hosts", []):
+        # FIX Issue 1: Only create devices with valid MAC addresses
+        mac = host.get("mac")
+        if not mac:
+            logger.warning(f"Skipping device {host.get('ip', 'unknown')} - no MAC address")
+            continue  # Skip devices without MAC
+
+        # FIX: Use MAC address as primary key for device lookup
+        # (IP can change via DHCP, MAC is permanent)
+        device = session.exec(
+            select(Device).where(Device.mac_address == mac)
+        ).first()
+
+        if not device:
+            device = Device(
+                name=host.get("hostname", host["ip"]),
+                ip_address=host["ip"],
+                mac_address=mac,  # Guaranteed to exist (validated above)
+                last_known_ip=host["ip"],  # Track IP for anomaly detection
+                os=host.get("os", None),  # Capture OS on first discovery
+                status=DeviceStatus.ONLINE,
+            )
+            session.add(device)
+            session.commit()
+            session.refresh(device)
+        else:
+            # Device exists - update last_seen and IP if changed
+            device.last_seen = datetime.utcnow()
+        device.status = DeviceStatus.ONLINE
+
+        # Check if IP changed (potential DHCP or attack)
+        if device.ip_address != host["ip"]:
+            logger.info(f"Device {mac} IP changed: {device.ip_address} → {host['ip']}")
+            device.ip_address = host["ip"]
+            device.last_known_ip = device.ip_address  # Update tracking
+
+        # Update OS if newly detected and previously unknown
+        if host.get("os") and not device.os:
+            device.os = host.get("os")
+
+        session.commit()
+
+        mac_address = mac
+
+        all_vulns = []
+        critical_count = 0
+
+        for svc in host.get("services", []):
+            if "vulnerability" in svc:
+                vuln = svc["vulnerability"]
+                vuln_severity = vuln.get("severity", "medium")
+                if vuln_severity == "critical":
+                    critical_count += 1
+                all_vulns.append({
+                    "cve": vuln.get("cve"),
+                    "title": vuln.get("title"),
+                    "severity": vuln_severity,
+                    "cvss": vuln.get("cvss"),
+                    "service": svc.get("service"),
+                    "port": svc.get("port"),
+                    "exploit_available": vuln.get("exploit_available", False),
+                })
+                vulnerability = Vulnerability(
+                    device_id=device.id,
+                    scan_id=scan.id,
+                    cve_id=vuln.get("cve"),
+                    title=vuln.get("title", "Unknown"),
+                    description=vuln.get("description"),
+                    severity=VulnerabilitySeverity(vuln_severity),
+                    cvss_score=vuln.get("cvss"),
+                    service=svc.get("service"),
+                    port=svc.get("port"),
+                    protocol=svc.get("protocol"),
+                    exploit_available=vuln.get("exploit_available", False),
+                    exploit_details=vuln.get("exploit_details"),
+                    remediation=vuln.get("remediation"),
+                )
+                session.add(vulnerability)
+                session.commit()
+
+                if vuln.get("exploit_available"):
+                    create_vulnerability_alert(session, vulnerability, device)
+
+        ai_summary = generate_ai_summary(host, all_vulns)
+
+        scan_data = ScanData(
+            device_id=device.id,
+            mac_address=mac_address,
+            ip_address=host["ip"],
+            scan_type=scan.scan_type if isinstance(scan.scan_type, str) else scan.scan_type.value,
+            raw_data=json.dumps(result, default=str),
+            services_json=json.dumps(host.get("services", [])),
+            vulnerabilities_json=json.dumps(all_vulns),
+            ai_vector_ready=True,
+            ai_summary=ai_summary,
+            os_detection=host.get("os", ""),
+            hostname=host.get("hostname", ""),
+            vendor=host.get("vendor", ""),
+            port_count=len(host.get("services", [])),
+            vuln_count=len(all_vulns),
+            critical_vuln_count=critical_count,
+        )
+        session.add(scan_data)
+        session.commit()
+
+        vector_store.store_scan_embedding(
+            mac_address=mac_address,
+            ip_address=host["ip"],
+            hostname=host.get("hostname", ""),
+            vendor=host.get("vendor", ""),
+            os_detection=host.get("os", ""),
+            scan_type=scan.scan_type if isinstance(scan.scan_type, str) else scan.scan_type.value,
+            services=host.get("services", []),
+            vulnerabilities=all_vulns,
+            raw_data=host,
+        )
+
+    # Set completed time and broadcast
+    scan.completed_at = datetime.utcnow()
+    session.commit()
+
+    broadcast_scan({
+        "id": scan.id,
+        "target": scan.target,
+        "scan_type": scan.scan_type,
+        "status": scan.status.value if hasattr(scan.status, 'value') else scan.status,
+        "result": result,
+    })
+
+@router.get("", response_model=List[Scan])
+def list_scans(session: Session = Depends(get_session)):
+    return session.exec(select(Scan).order_by(Scan.started_at.desc())).all()
+
+
+@router.get("/queue")
+def get_scan_queue(session: Session = Depends(get_session)):
+    """Get next pending scan job for scanner worker."""
+    scan = session.exec(
+        select(Scan).where(Scan.status == ScanStatus.PENDING).order_by(Scan.started_at.asc()).limit(1)
+    ).first()
+    if scan:
+        return scan
+    return None
+
+
+@router.post("/network")
+def run_network_scan(
+    request: NetworkScanRequest,
+    session: Session = Depends(get_session),
+):
+    # Validate target: IP, CIDR, or hostname
+    if not is_valid_target(request.target):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid target format. Provide a valid IP address, CIDR range, or hostname.",
+        )
+    scan = Scan(
+        target=request.target.strip(),
+        scan_type=request.scan_type,
+        status=ScanStatus.RUNNING,
+    )
+    session.add(scan)
+    session.commit()
+    session.refresh(scan)
+    try:
+        result = run_scanner(scan.target, scan.scan_type.value, request.ports)
+    except Exception as e:
+        logger.error(f"Scanner execution failed: {e}")
+        raise HTTPException(status_code=400, detail=f"Scanner error: {str(e)}")
+    if result.get("status") == "error":
+        raise HTTPException(status_code=400, detail=result.get("message", "Unknown error"))
+    process_scan_results(session, scan, result)
+    return {"scan": scan, "result": result}
+@router.get("/vulnerabilities", response_model=List[VulnerabilityResponse])
+def list_vulnerables(device_id: Optional[int] = None, session: Session = Depends(get_session)):
+    query = select(Vulnerability)
+    if device_id:
+        query = query.where(Vulnerability.device_id == device_id)
+    return session.exec(query.order_by(Vulnerability.discovered_at.desc())).all()
+
+
+@router.get("/vulnerabilities/{vuln_id}", response_model=VulnerabilityResponse)
+def get_vulnerability(vuln_id: int, session: Session = Depends(get_session)):
+    vuln = session.get(Vulnerability, vuln_id)
+    if not vuln:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    return vuln
+
+
+@router.post("/vulnerabilities/{vuln_id}/acknowledge")
+def acknowledge_vulnerability(vuln_id: int, session: Session = Depends(get_session)):
+    vuln = session.get(Vulnerability, vuln_id)
+    if not vuln:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    vuln.acknowledged = True
+    session.commit()
+    return {"status": "acknowledged", "id": vuln_id}
+
+
+@router.delete("/vulnerabilities/{vuln_id}")
+def delete_vulnerability(vuln_id: int, session: Session = Depends(get_session)):
+    vuln = session.get(Vulnerability, vuln_id)
+    if not vuln:
+        raise HTTPException(status_code=404, detail="Vulnerability not found")
+    session.delete(vuln)
+    session.commit()
+    return {"status": "deleted", "id": vuln_id}
+
+
+@router.post("/{scan_id}/results")
+def upload_scan_results(
+    scan_id: int,
+    results: dict,
+    session: Session = Depends(get_session),
+):
+    """Upload scan results from scanner worker."""
+    scan = session.get(Scan, scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    
+    process_scan_results(session, scan, results)
+    return {"status": "success", "scan_id": scan_id}
+
+
+@router.post("/deep")
+def run_deep_scan(
+    request: NetworkScanRequest,
+    session: Session = Depends(get_session),
+    background_tasks: BackgroundTasks = None,
+):
+    """Run a deep scan with vulnerability detection on a specific host."""
+    result = run_scanner(request.target, "deep", request.ports or "1-1000")
+    
+    vulnerabilities = []
+    if result.get("status") == "success":
+        for host in result.get("hosts", []):
+            for svc in host.get("services", []):
+                if "vulnerability" in svc:
+                    vuln = svc["vulnerability"]
+                    vulnerabilities.append({
+                        "cve": vuln.get("cve"),
+                        "title": vuln.get("title"),
+                        "severity": vuln.get("severity"),
+                        "cvss": vuln.get("cvss"),
+                        "service": svc.get("service"),
+                        "port": svc.get("port"),
+                        "exploit_available": vuln.get("exploit_available", False),
+                    })
+    
+    return {
+        "status": result.get("status"),
+        "target": request.target,
+        "vulnerabilities": vulnerabilities,
+        "hosts": result.get("hosts", []),
+    }
+
+
+@router.post("", response_model=Scan)
+def create_scan(scan: Scan, session: Session = Depends(get_session)):
+    session.add(scan)
+    session.commit()
+    session.refresh(scan)
+    return scan
+
+
+@router.put("/{scan_id}", response_model=Scan)
+def update_scan(scan_id: int, scan_update: Scan, session: Session = Depends(get_session)):
+    scan = session.get(Scan, scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    update_data = scan_update.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(scan, key, value)
+    session.add(scan)
+    session.commit()
+    session.refresh(scan)
+    return scan
+
+
+@router.get("/device/{device_id}/scan-data")
+def get_device_scan_data(device_id: int, session: Session = Depends(get_session)):
+    """Get all scan data for a device, optimized for AI/LLM consumption."""
+    scans = session.exec(
+        select(ScanData).where(ScanData.device_id == device_id).order_by(ScanData.scanned_at.desc())
+    ).all()
+    
+    result = []
+    for scan in scans:
+        result.append({
+        "id": scan.id,
+        "mac_address": scan.mac_address,
+        "ip_address": scan.ip_address,
+        "scan_type": scan.scan_type,
+        "scanned_at": scan.scanned_at.isoformat() if scan.scanned_at else None,
+        "os_detection": scan.os_detection,
+        "hostname": scan.hostname,
+        "vendor": scan.vendor,
+        "port_count": scan.port_count,
+        "vuln_count": scan.vuln_count,
+        "critical_vuln_count": scan.critical_vuln_count,
+        "ai_summary": scan.ai_summary,
+        "services": json.loads(scan.services_json) if scan.services_json else [],
+        "vulnerabilities": json.loads(scan.vulnerabilities_json) if scan.vulnerabilities_json else [],
+        "raw_data": json.loads(scan.raw_data) if scan.raw_data else {},
+        })
+    
+    return result
+
+
+@router.get("/device/{device_id}/ai-vector")
+def get_device_ai_vector(device_id: int, session: Session = Depends(get_session)):
+    """Get all scan data formatted for vector storage/embedding."""
+    scans = session.exec(
+        select(ScanData).where(ScanData.device_id == device_id).order_by(ScanData.scanned_at.desc())
+    ).all()
+    
+    vectors = []
+    for scan in scans:
+        vectors.append({
+        "id": scan.id,
+        "text": scan.ai_summary,
+        "metadata": {
+                "device_id": scan.device_id,
+                "mac_address": scan.mac_address,
+                "ip_address": scan.ip_address,
+                "scan_type": scan.scan_type,
+                "scanned_at": scan.scanned_at.isoformat() if scan.scanned_at else None,
+                "vuln_count": scan.vuln_count,
+                "critical_vuln_count": scan.critical_vuln_count,
+                "os": scan.os_detection,
+        }
+        })
+    
+    return {
+        "device_id": device_id,
+        "vector_count": len(vectors),
+        "vectors": vectors,
+        "ready_for_embedding": True,
+    }
+
+
+@router.get("/all/ai-export")
+def get_all_ai_export(session: Session = Depends(get_session)):
+    """Export all scan data in AI-ready format."""
+    scans = session.exec(select(ScanData).order_by(ScanData.scanned_at.desc())).all()
+    
+    return {
+        "total_scans": len(scans),
+        "devices_scanned": len(set(s.mac_address for s in scans if s.mac_address != "unknown")),
+        "total_vulnerabilities": sum(s.vuln_count for s in scans),
+        "scan_data": [
+        {
+                "id": scan.id,
+                "mac_address": scan.mac_address,
+                "ip_address": scan.ip_address,
+                "ai_summary": scan.ai_summary,
+                "scanned_at": scan.scanned_at.isoformat() if scan.scanned_at else None,
+        }
+        for scan in scans
+        ]
+    }
+
+
+@router.get("/vector/search")
+def search_similar(query: str, limit: int = 5):
+    """Search for similar hosts using vector similarity."""
+    results = vector_store.search_similar_hosts(query, limit)
+    return {"query": query, "results": results}
+
+
+@router.get("/vector/all")
+def get_all_vectors():
+    """Get all stored vector embeddings and devices."""
+    devices = vector_store.get_all_devices()
+    services = vector_store.get_all_services()
+    return {
+        "devices": devices,
+        "services": services,
+    }
+
+
+@router.get("/vector/devices/{device_id}/services")
+def get_device_services_vector(device_id: int):
+    """Get all services for a device in vector storage."""
+    return {"device_id": device_id, "services": vector_store.get_device_services(device_id)}
+
+
+@router.get("/vector/services/{service_name}/devices")
+def get_service_devices_vector(service_name: str, version: str = None):
+    """Get all devices running a specific service."""
+    return {
+        "service_name": service_name,
+        "version": version,
+        "devices": vector_store.get_service_devices(service_name, version),
+    }
+
+
+@router.get("/vector/stats")
+def get_vector_stats():
+    """Get vector storage statistics."""
+    return vector_store.get_embedding_stats()
